@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
     <style>
         body {
             background: #f5f5f5;
@@ -53,9 +54,7 @@
             height: 80%;
             border-radius: 50%;
             border: 2px solid black;
-            /* Bordo nero */
             pointer-events: none;
-            /* Permette al testo sottostante di essere cliccabile */
         }
 
         #whiteLabel,
@@ -71,7 +70,6 @@
 
 <body>
     <div class="container py-5">
-        <h1 class="text-center mb-5">Player Match</h1>
         <form id="playerForm" class="mb-5">
             <div class="form-group">
                 <label for="player1">Player 1</label>
@@ -97,7 +95,7 @@
                         <input type="radio" name="playerOptions" id="player2Option" autocomplete="off"> Player2
                     </label>
                 </div>
-                <div id="matchScore" class="w-100" style="font-size: tiny; text-align: center;">0 - 0</div>
+                <div id="matchScore" class="w-100" style="font-size: tiny; text-align: center;">(0,0,NaN) <strong>0 - 0</strong> (0,0,NaN)</div>
             </div>
             <div id="squareLabels" class="d-flex justify-content-center mb-5" style="display: none;">
                 <div class="border-container">
@@ -112,20 +110,31 @@
                 <!-- Score buttons will be added here by JavaScript -->
             </div>
         </div>
+        <div id="endMatch" class="justify-content-center mb-5 flex-column" style="display: none;">
+            <button type="button" class="btn btn-primary" onclick="endMatch()">End Match</button>
+        </div>
+        <div id="results" class="justify-content-center mb-5 flex-column" style="display: none;">
+        </div>
     </div>
 
     <script>
-        let biglie = 0;
+        let balls = 9;
         let players = {
-            player1: { points: 0, biglie: 0, errori: 0, tpaScore: 0 },
-            player2: { points: 0, biglie: 0, errori: 0, tpaScore: 0 }
+            player1: { points: 0, balls: 0, errors: 0, tpaScore: 0 , scores: [], tpaScores: []},
+            player2: { points: 0, balls: 0, errors: 0, tpaScore: 0 , scores: [], tpaScores: []}
         };
         let currentPlayer = 'player1';
         let isStartOfGame = true;
         let isBreakShot = true;
         let isBreakShotComplete = false;
-        let isMKSPressed = false;
-        let biglieInizioTurno = 0; // serve per il reset
+        let ballsTurnStart = 0; 
+        let switchCauseOfPush = false;
+        let lastBalls = 0;
+        let lastIsSafe = false;
+        let playersButtonEnabled = true;
+        let ballsPocketedInBreak = 0;
+        let gameEnded = false;
+        let firstShotAfterBreak = false; // only on the first shot after the break can you opt for the push
 
 
         function getCookie(cname) {
@@ -157,11 +166,12 @@
         }
 
         function toggleButtons() {
-            // toggleButtons() abilita tutti i pulsanti numerici e disabilita tutti i pulsanti lettera
-            // toggleButtons(3) disabilita i pulsanti da 4 a 9 e disabilita tutti gli altri 
-            // toggleButtons(-2) abilita i pulsanti da 1 a 2 e disabilita tutti gli altri 
-            // toggleButtons([1,3,q]) abilita i pulsanti 1, 3 e q e disabilita tutti gli altri
-            // toggleButtons([M, N, x],[1,3,q]) disabilita i pulsanti M, N e x e abilita i pulsanti 1, 3 e q
+            // toggleButtons() enables all numeric buttons and disables all letter buttons
+            // toggleButtons(3) disables buttons from 4 to 9 and disables all others
+            // toggleButtons(-2) enables buttons from 1 to 2 and disables all others
+            // toggleButtons([1,3,q]) enables buttons 1, 3, and q and disables all others
+            // toggleButtons([M, N, x],[1,3,q]) disables buttons M, N, and x and enables buttons 1, 3, and q
+
             if (arguments.length === 0) {
                 document.querySelectorAll('.btn-square').forEach(function (btn) {
                     if (!isNaN(btn.textContent)) {
@@ -191,7 +201,7 @@
                         document.querySelectorAll('.btn-square').forEach(function (btn) {
                             if (!isNaN(btn.textContent)) {
                                 btn.style.display = "";
-                                if (parseInt(btn.textContent) <= -tmp) {
+                                if (parseInt(btn.textContent) <= -tmp && parseInt(btn.textContent) > 0) {
                                     btn.disabled = false;
                                 } else {
                                     btn.disabled = true;
@@ -226,26 +236,52 @@
             }   
         }
 
-
-        function startMatch() {
-            biglie = 9;
-            biglieInizioTurno = biglie;
-            players.player1.points = 0;
-            players.player2.points = 0;
-            players.player1.biglie = 9;
-            players.player2.biglie = 9;
-            players.player1.errori = 0;
-            players.player2.errori = 0;
-            players.player1.tpaScore = 0;
-            players.player2.tpaScore = 0;
-            currentPlayer = 'player1';
+        function initGame() {
+            balls = 9;
             isStartOfGame = true;
             isBreakShot = true;
             isBreakShotComplete = false;
-            isMKSPressed = false;
-            lastButtonIsNumeric = false;
+            switchCauseOfPush = false;
+            lastBalls = 0;
+            ballsPocketedInBreak = 0;
+            gameEnded = false;
+            firstShotAfterBreak = false;
+        }
+
+        function updateScore() {
+            players.player1.tpaScore = Math.round(players.player1.balls / (players.player1.errors + players.player1.balls) * 1000);
+            players.player2.tpaScore = Math.round(players.player2.balls / (players.player2.errors + players.player2.balls) * 1000);
+            document.getElementById('matchScore').innerHTML = '('+players.player1.balls+','+players.player1.errors+','+players.player1.tpaScore+')<strong>'+players.player1.points + ' - ' 
+                + players.player2.points + '</strong>(' + players.player2.balls + ',' + players.player2.errors + ',' + players.player2.tpaScore + ')';  
+            if (isBreakShot) {// just for debugging purposes
+                document.getElementById('whiteLabel').style.backgroundColor = 'lightgreen';
+            } else if (!isBreakShotComplete) {
+                document.getElementById('whiteLabel').style.backgroundColor = 'lightblue';
+            } else {
+                document.getElementById('whiteLabel').style.backgroundColor = 'white';
+            }
+        }
+
+
+        function startMatch() {
+            initGame();
+            ballsTurnStart = balls;
+            players.player1.points = 0;
+            players.player2.points = 0;
+            players.player1.balls = 0;
+            players.player2.balls = 0;
+            players.player1.errors = 0;
+            players.player2.errors = 0;
+            players.player1.tpaScore = 0;
+            players.player2.tpaScore = 0;
+            players.player1.scores = [];
+            players.player2.scores = [];
+            players.player1.tpaScores = [];
+            players.player2.tpaScores = [];
+            currentPlayer = 'player1';
 
             document.getElementById('playerForm').style.display = 'none';
+            document.getElementById('endMatch').style.display = 'flex';
 
             var date = new Date();
             document.getElementById('dateTitle').innerHTML = date.toDateString();
@@ -266,10 +302,10 @@
                 [null, '4', '5', '6', null],
                 [null, '7', '8', '9', null],
                 [null, '0', null],
+                [null ,'G', null],
                 [null, 'M', 'K', 'S', null],
                 [null, 'P', null, 'N', null],
-                [null, null, 'n', 'x', null, null],
-                [null, null, 'p', 'q', null, null]
+                [null, 'n', 'x', 'p', null]
             ];
 
             buttons.forEach(function (row) {
@@ -285,7 +321,6 @@
                         btn.className = 'btn btn-secondary btn-square';
                         btn.textContent = button;
                         if (isNaN(button)) {
-                            //btn.disabled = true;
                             btn.style.display = 'none';
                         }
                         col.appendChild(btn);
@@ -294,79 +329,188 @@
                     if (button !== null) {
                         btn.addEventListener('click', function () {
                             if (!isNaN(button)) {
-                                if (isStartOfGame) {//spaccata
-                                    if (lastButtonIsNumeric) { //ho già segnato le biglie totali. Ora devo segnare le biglie in spaccata in alto a sinistra
-                                        document.getElementById('whiteLabel').innerHTML = '<sup>' + button + '</sup>' + document.getElementById('whiteLabel').innerHTML;
-                                        toggleButtons(['M', 'K', 'S', 'P', 'N']);
-                                        lastButtonIsNumeric = false;
-                                        isStartOfGame = (biglie === 9); // se ho segnato 9 biglie in spaccata, allora è inizio di game
-                                    } else {
+                                if (isBreakShot) {
+                                    playersButtonEnabled  = false;
+                                    lastBalls = button;
+                                    firstShotAfterBreak = true;
+                                    if (button == 0) {
                                         document.getElementById('whiteLabel').innerText = button;
-                                        if (button === '0') {
-                                            isStartOfGame = false;
-                                            toggleButtons(['M', 'K', 'S','P','N']);
-                                        } else {//devo segnare le biglie totali e abilitare i pulsanti numerici da 1 a button per segnare le biglie in spaccata
-                                            biglie -= parseInt(button);
-                                            players[currentPlayer].biglie += parseInt(button);
-                                            toggleButtons(-parseInt(button));
-                                            lastButtonIsNumeric = true;
+                                        toggleButtons(['P', 'N']);
+                                        playersButtonEnabled  = true;
+                                        isBreakShot = false;
+                                        isBreakShotComplete = true;
+                                    } else if (button < 9) {
+                                        document.getElementById('whiteLabel').innerText = button;
+                                        playersButtonEnabled  = false
+                                        toggleButtons(-button);
+                                        balls -= button;
+                                        players[currentPlayer].balls += parseInt(button);
+                                        isBreakShot = false;
+                                        isBreakShotComplete = false;
+                                    } else {// the miracle shot
+                                        document.getElementById('whiteLabel').innerHTML = '<sup>' + button + '</sup>' + button
+                                        document.getElementById('circle').style.display = 'block';
+                                        balls -= button;
+                                        gameEnded = true;
+                                        players[currentPlayer].balls += parseInt(button);
+                                        players[currentPlayer].points++;
+                                        updateScore();
+                                        isBreakShot = false;
+                                        isBreakShotComplete = true;
+                                        playersButtonEnabled  = true;
+                                    }
+                                } else if (!isBreakShotComplete) {
+                                    if (button > 0) {
+                                        document.getElementById('whiteLabel').innerHTML = '<sup>' + button + '</sup>' + document.getElementById('whiteLabel').innerHTML;
+                                    }
+                                    if (button == lastBalls && lastBalls > 0) {
+                                        toggleButtons(['M', 'K', 'S', 'G','p', 'P']);
+                                    } else {
+                                        toggleButtons(['M', 'K', 'S', 'G','P']);
+                                        firstShotAfterBreak = false;
+                                    }
+                                    playersButtonEnabled  = false;
+                                    ballsPocketedInBreak = button; 
+                                } else if (switchCauseOfPush) {
+                                    firstShotAfterBreak = false;
+                                    playersButtonEnabled  = false;
+                                    lastBalls = button;
+                                    if (button == 0) {
+                                        toggleButtons(['S','K','M','p']);
+                                        document.getElementById('whiteLabel').innerText = button;
+                                    } else {
+                                        switchCauseOfPush = false;
+                                        lastPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+                                        players[lastPlayer].errors++; // failing to execute a safety succesfully 
+                                        document.getElementById('whiteLabel').innerText = button;
+                                        balls -= button;
+                                        players[currentPlayer].balls += parseInt(button);
+                                        if (balls == 0) {
+                                            gameEnded = true;
+                                            players[currentPlayer].points++;
+                                            isBreakShotComplete = true;
+                                            updateScore();
+                                            playersButtonEnabled  = true;
+                                            document.getElementById('circle').style.display = 'block';
+                                            toggleButtons([]);
+                                        } else {
+                                            toggleButtons(['S', 'K', 'M', 'G','P']);
+                                            playersButtonEnabled  = false;
                                         }
                                     }
                                 } else {
-                                    biglie -= parseInt(button);
-                                    players[currentPlayer].biglie += parseInt(button);
+                                    playersButtonEnabled  = false;
+                                    players[currentPlayer].balls += parseInt(button);
+                                    balls -= button;
+                                    lastBalls = button;
+                                    switchCauseOfPush = false;
                                     document.getElementById('whiteLabel').innerText = button;
-                                    toggleButtons(['M', 'K', 'S', 'P', 'N']);
-                                }
-                                // If biglie is 0, aggiorno il punteggio
-                                if (biglie === 0) {
-                                    document.getElementById('circle').style.display = 'block';
-                                    // fine game. aggiorno punteggio e disabilito i pulsanti lettera
-                                    players[currentPlayer].points++;
-                                    document.getElementById('matchScore').innerText = players.player1.points + ' - ' + players.player2.points;
-                                    if (biglieInizioTurno === 9) {//aperto e chiuso un tavolo. devo segnare quanti in spaccata 
-                                        toggleButtons(-9);
-                                        lastButtonIsNumeric = true;
-
-                                    } else {
+                                    if (balls == 0) { // winning game shot
+                                        gameEnded = true;
+                                        players[currentPlayer].points++;
+                                        isBreakShotComplete = true;
+                                        updateScore();
+                                        playersButtonEnabled  = true;
                                         toggleButtons([]);
-                                    }
-                                }
-                            } else {
-                                if (['M', 'K', 'S'].includes(button)) {
-                                    document.getElementById('whiteLabel').innerHTML += button;
-                                    if (button === 'S') {//dopo una S puo' esserci una x oppure, se l'inizio di un game potrebbe esserci una p
-                                        if (isBreakShotComplete) {
-                                            toggleButtons(['x', 'P', 'N']);
+                                        document.getElementById('circle').style.display = 'block';
+                                    } else {
+                                        if (button > 0) {
+                                            if (lastIsSafe) {
+                                                lastPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+                                                players[lastPlayer].errors++; // failing to execute a safety succesfully
+                                            }
+                                            toggleButtons(['S', 'K', 'M', 'G','P']);
                                         } else {
-                                            toggleButtons(['x', 'p', 'P', 'N', 'M']);
+                                            if (firstShotAfterBreak) {
+                                                toggleButtons(['S', 'K', 'M','p']);
+                                            } else {
+                                                toggleButtons(['S', 'K', 'M']);
+                                            }
                                         }
-                                    } else if (button === 'M') {
-                                        toggleButtons(['n','q','P','N']);
-                                    } else {
-                                        toggleButtons(['P', 'N']);  
+                                        playersButtonEnabled  = false;
+                                        firstShotAfterBreak = false;
                                     }
-                                    isStartOfGame = false;
-                                    lastButtonIsNumeric = false;
+                                    lastIsSafe = false;
                                 }
-                                else if (['n', 'x', 'p', 'q'].includes(button)) {
-                                    document.getElementById('whiteLabel').innerHTML += '<sup>' + button + '</sup>';
+                            } else if (button === 'G') {
+                                gameEnded = true;
+                                players[currentPlayer].points++; 
+                                document.getElementById('circle').style.display = 'block';
+                                playersButtonEnabled  = true;
+                                isBreakShotComplete = true;
+                                balls = 0;
+                                toggleButtons([]);
+                                updateScore();
+                            } else if (button == 'M') {
+                                document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML+'M';
+                                lastIsSafe = false;
+                                players[currentPlayer].errors++; //missing a shot
+                                playersButtonEnabled  = true;
+                                if (lastBalls > 0) {//getting out of position
+                                    players[currentPlayer].errors++;
+                                    toggleButtons(['n','P', 'N']);
+                                } else {
+                                    toggleButtons(['P', 'N']);
                                 }
-                                else if (['P', 'N'].includes(button)) {
-                                    let grayLabelText = document.getElementById('grayLabel').innerText;
-                                    if (grayLabelText[grayLabelText.length - 1] === button) {
-                                        document.getElementById('grayLabel').innerText = grayLabelText.slice(0, -1);
+                            } else if (button == 'K') {
+                                document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML+'K';
+                                lastIsSafe = false;
+                                players[currentPlayer].errors++; //missing a shot
+                                playersButtonEnabled  = true;
+                                if (lastBalls > 0) {//getting out of position
+                                    players[currentPlayer].errors++;
+                                }
+                                toggleButtons(['P', 'N']);
+                            } else if (button == 'S') {
+                                lastIsSafe = true;
+                                if (lastBalls == ballsPocketedInBreak && !isBreakShotComplete) {
+                                    document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML+'S';
+                                    toggleButtons(['P', 'N']);
+                                    playersButtonEnabled  = true;
+                                    // no position error (?)
+                                } else if (switchCauseOfPush && lastBalls == 0) {
+                                    document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML+'S';
+                                    switchCauseOfPush = false;
+                                    toggleButtons(['P', 'N']); 
+                                    playersButtonEnabled  = true;
+                                } else {
+                                    document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML+'S';
+                                    switchCauseOfPush = false;
+                                    if (lastBalls > 0) {// getting out of position
+                                        players[currentPlayer].errors++;
+                                        toggleButtons(['P', 'N','x']);
                                     } else {
-                                        document.getElementById('grayLabel').innerText += button;
+                                        toggleButtons(['P', 'N']);
                                     }
+                                    playersButtonEnabled  = true;
                                 }
+                            } else if (['P', 'N'].includes(button)) {
+                                document.getElementById('grayLabel').innerText += button;
+                                players[currentPlayer].errors++;
+                                playersButtonEnabled  = true;
+                                isBreakShotComplete = true;
+                                firstShotAfterBreak = false;
+                                toggleButtons([]);
+                            } else if (['n','x'].includes(button)) {// no position error
+                                players[currentPlayer].errors--;
+                                toggleButtons(['P', 'N']);
+                                document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML + '<sup>' + button + '</sup>';
+                                playersButtonEnabled  = true;
+                            } else if (button == 'p') {
+                                document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML + 'S<sup>p</sup>';
+                                switchCauseOfPush = !switchCauseOfPush;
+                                playersButtonEnabled  = true;
+                                toggleButtons([]);
                             }
+                            updateScore();
                         });
                     }
                 });
                 scoreButtons.appendChild(div);
             });
             scoreButtons.style.display = 'block';
+            saveTurnState("Start");
+            saveTurnState("End");
         }
 
         window.onload = function () {
@@ -381,54 +525,210 @@
             }
         };
 
-        function resetTurn() {
-            document.getElementById('circle').style.display = 'none';  // Nasconde il cerchio quando si cambia giocatore
-            document.getElementById('whiteLabel').innerText = ''; // Resetta il punteggio
-            document.getElementById('grayLabel').innerText = ''; // Resetta il punteggio
-            if (biglie === 0) {// avevo segnato il punto e devo resettare
-                if (currentPlayer === 'player1') {
-                    players.player1.points--;
-                } else {
-                    players.player2.points--;
+        function switchPlayer() {
+            var activeLabel = $('#playersGroup label.active');
+            var nextLabel = activeLabel.siblings();
+          
+            activeLabel.removeClass('active');
+          
+            nextLabel.addClass('active');
+          
+          }
+          
+        function resetTurn(Time) {
+            balls = parseInt(document.cookie.split('; ').find(row => row.startsWith('ballsTurnState'+Time)).split('=')[1]);
+            if (Time == "Start") {
+                document.getElementById('circle').style.display = 'none';  
+                document.getElementById('whiteLabel').innerText = ''; 
+                document.getElementById('grayLabel').innerText = ''; 
+                toggleButtons(balls);            
+            } else {
+                document.getElementById('circle').style.display = document.cookie.split('; ').find(row => row.startsWith('circleTurnState'+Time)).split('=')[1];
+                document.getElementById('whiteLabel').innerHTML = document.cookie.split('; ').find(row => row.startsWith('whiteLabelTurnState'+Time)).split('=')[1];
+                document.getElementById('grayLabel').innerText = document.cookie.split('; ').find(row => row.startsWith('grayLabelTurnState'+Time)).split('=')[1];
+                var buttonEnabled = document.cookie.split('; ').find(row => row.startsWith('buttonsEnabledTurnState'+Time)).split('=')[1].split(',');
+                switchPlayer();
+                toggleButtons(buttonEnabled);
+            }
+            players.player1.points = parseInt(document.cookie.split('; ').find(row => row.startsWith('player1PointsTurnState'+Time)).split('=')[1]);
+            players.player2.points = parseInt(document.cookie.split('; ').find(row => row.startsWith('player2PointsTurnState'+Time)).split('=')[1]);
+            players.player1.balls = parseInt(document.cookie.split('; ').find(row => row.startsWith('player1BallsTurnState'+Time)).split('=')[1]);
+            players.player2.balls = parseInt(document.cookie.split('; ').find(row => row.startsWith('player2BallsTurnState'+Time)).split('=')[1]);
+            players.player1.errors = parseInt(document.cookie.split('; ').find(row => row.startsWith('player1ErrorsTurnState'+Time)).split('=')[1]);
+            players.player2.errors = parseInt(document.cookie.split('; ').find(row => row.startsWith('player2ErrorsTurnState'+Time)).split('=')[1]);
+            players.player1.tpaScore = document.cookie.split('; ').find(row => row.startsWith('player1TpaScoreTurnState'+Time)).split('=')[1];
+            players.player2.tpaScore = document.cookie.split('; ').find(row => row.startsWith('player2TpaScoreTurnState'+Time)).split('=')[1];
+            currentPlayer = document.cookie.split('; ').find(row => row.startsWith('currentPlayerTurnState'+Time)).split('=')[1];
+            isStartOfGame = document.cookie.split('; ').find(row => row.startsWith('isStartOfGameTurnState'+Time)).split('=')[1] == 'true';
+            isBreakShot = document.cookie.split('; ').find(row => row.startsWith('isBreakShotTurnState'+Time)).split('=')[1] == 'true';
+            firstShotAfterBreak = document.cookie.split('; ').find(row => row.startsWith('firstShotAfterBreakTurnState'+Time)).split('=')[1] == 'true';
+            isBreakShotComplete = document.cookie.split('; ').find(row => row.startsWith('isBreakShotCompleteTurnState'+Time)).split('=')[1] == 'true';
+            ballsTurnStart = parseInt(document.cookie.split('; ').find(row => row.startsWith('ballsTurnStartTurnState'+Time)).split('=')[1]);
+            switchCauseOfPush = document.cookie.split('; ').find(row => row.startsWith('switchCauseOfPushTurnState'+Time)).split('=')[1] == 'true';
+            lastBalls = parseInt(document.cookie.split('; ').find(row => row.startsWith('lastBallsTurnState'+Time)).split('=')[1]);
+            lastIsSafe = document.cookie.split('; ').find(row => row.startsWith('lastIsSafeTurnState'+Time)).split('=')[1] == 'true';
+            playersButtonEnabled = document.cookie.split('; ').find(row => row.startsWith('playersButtonEnabledTurnState'+Time)).split('=')[1] == 'true';
+            ballsPocketedInBreak = parseInt(document.cookie.split('; ').find(row => row.startsWith('ballsPocketedInBreakTurnState'+Time)).split('=')[1]);
+            gameEnded = document.cookie.split('; ').find(row => row.startsWith('gameEndedTurnState'+Time)).split('=')[1] == 'true';
+            updateScore();
+            players[currentPlayer].scores.pop();
+            players[currentPlayer].tpaScores.pop();
+        }
+
+        function saveTurnState(Time) {
+            if (Time == 'End') {// saves white and gray labels in current player scores
+                players[currentPlayer].scores.push(document.getElementById("squareLabels").cloneNode(true).outerHTML);
+                players[currentPlayer].tpaScores.push(players[currentPlayer].tpaScore);
+            }
+            var d = new Date();
+            d.setTime(d.getTime() + (60 * 60 * 24 * 60 * 1000)); // Two months
+            var expires = "expires=" + d.toUTCString();
+
+            document.cookie = "ballsTurnState" + Time + "=" + balls + ";" + expires + ";path=/";
+            document.cookie = "player1PointsTurnState" + Time + "=" + players.player1.points + ";" + expires + ";path=/";
+            document.cookie = "player2PointsTurnState" + Time + "=" + players.player2.points + ";" + expires + ";path=/";
+            document.cookie = "player1BallsTurnState" + Time + "=" + players.player1.balls + ";" + expires + ";path=/";
+            document.cookie = "player2BallsTurnState" + Time + "=" + players.player2.balls + ";" + expires + ";path=/";
+            document.cookie = "player1ErrorsTurnState" + Time + "=" + players.player1.errors + ";" + expires + ";path=/";
+            document.cookie = "player2ErrorsTurnState" + Time + "=" + players.player2.errors + ";" + expires + ";path=/";
+            document.cookie = "player1TpaScoreTurnState" + Time + "=" + players.player1.tpaScore + ";" + expires + ";path=/";
+            document.cookie = "player2TpaScoreTurnState" + Time + "=" + players.player2.tpaScore + ";" + expires + ";path=/";
+            document.cookie = "currentPlayerTurnState" + Time + "=" + currentPlayer + ";" + expires + ";path=/";
+            document.cookie = "isStartOfGameTurnState" + Time + "=" + isStartOfGame + ";" + expires + ";path=/";
+            document.cookie = "isBreakShotTurnState" + Time + "=" + isBreakShot + ";" + expires + ";path=/";
+            document.cookie = "firstShotAfterBreakTurnState" + Time + "=" + firstShotAfterBreak + ";" + expires + ";path=/";
+            document.cookie = "isBreakShotCompleteTurnState" + Time + "=" + isBreakShotComplete + ";" + expires + ";path=/";
+            document.cookie = "ballsTurnStartTurnState" + Time + "=" + ballsTurnStart + ";" + expires + ";path=/";
+            document.cookie = "switchCauseOfPushTurnState" + Time + "=" + switchCauseOfPush + ";" + expires + ";path=/";
+            document.cookie = "lastBallsTurnState" + Time + "=" + lastBalls + ";" + expires + ";path=/";
+            document.cookie = "lastIsSafeTurnState" + Time + "=" + lastIsSafe + ";" + expires + ";path=/";
+            document.cookie = "playersButtonEnabledTurnState" + Time + "=" + playersButtonEnabled + ";" + expires + ";path=/";
+            document.cookie = "ballsPocketedInBreakTurnState" + Time + "=" + ballsPocketedInBreak + ";" + expires + ";path=/";
+            document.cookie = "gameEndedTurnState" + Time + "=" + gameEnded + ";" + expires + ";path=/";
+            document.cookie = "circleTurnState" + Time + "=" + document.getElementById('circle').style.display + ";" + expires + ";path=/";
+            document.cookie = "whiteLabelTurnState" + Time + "=" + document.getElementById('whiteLabel').innerHTML + ";" + expires + ";path=/";
+            document.cookie = "grayLabelTurnState" + Time + "=" + document.getElementById('grayLabel').innerText + ";" + expires + ";path=/";
+            var buttonsEnabled = [];
+            document.querySelectorAll('.btn-square').forEach(function (btn) {
+                if (btn.style.display != 'none') {
+                    buttonsEnabled.push(btn.textContent);
                 }
-                document.getElementById('matchScore').innerText = players.player1.points + ' - ' + players.player2.points;
-            }
-            players[currentPlayer].biglie -= biglieInizioTurno - biglie;
-            biglie = biglieInizioTurno;
-            if (biglie === 9) {
-                isStartOfGame = true;
-            }
-            toggleButtons(biglie);
-            lastButtonIsNumeric = false;
+            });
+            document.cookie = "buttonsEnabledTurnState" + Time + "=" + buttonsEnabled + ";" + expires + ";path=/";
         }
 
         $(function () {
             $('#playersGroup label').on('click', function () {
+                if (!playersButtonEnabled) return;
+                saveTurnState("End");
                 $(this).addClass('active').siblings().removeClass('active');
-                if (biglie === 0) {
-                    biglie = 9;
-                    isStartOfGame = true;
+                if (gameEnded) {
+                    initGame();
+                } else if (balls == 9 && isBreakShot) {
+                    playersButtonEnabled = true;
                     isBreakShotComplete = false;
                 } else {
+                    playersButtonEnabled = false;
                     isBreakShotComplete = true;
                 }
-                document.getElementById('circle').style.display = 'none';  // Nasconde il cerchio quando si cambia giocatore
-                document.getElementById('whiteLabel').innerText = ''; // Resetta il punteggio
-                document.getElementById('grayLabel').innerText = ''; // Resetta il punteggio
+                document.getElementById('circle').style.display = 'none';  
+                document.getElementById('whiteLabel').innerText = ''; 
+                document.getElementById('grayLabel').innerText = ''; 
                 currentPlayer = this.id === 'player1Label' ? 'player1' : 'player2';            
-                biglieInizioTurno = biglie;   
-                toggleButtons(biglie);         
+                ballsTurnStart = balls;   
+                toggleButtons(balls);      
+                updateScore();
+                saveTurnState("Start");
             });
         });
 
-        document.getElementById('whiteLabel').addEventListener('click', function () {// quando cancello il bianco devo resettare tutto il turno. E' come se avessi cambiato giocatore
-            resetTurn();
+        document.getElementById('whiteLabel').addEventListener('click', function () {
+            resetTurn("Start");
 
         });
 
         document.getElementById('grayLabel').addEventListener('click', function () {
-            this.innerText = '';
+            resetTurn("End");
         });
+
+        function endMatch() {
+            var confirmation = window.confirm("This will end the match. Are you sure?");
+          
+            if (!confirmation) return;
+
+            saveTurnState("End");
+          
+            var tableHtml = '<div class="container"><table class="table table-bordered"><thead class="thead-dark"><tr><th class="h4 text-center">'+document.getElementById('player1Label').innerText+'</th><th class="h4 text-center">'+document.getElementById('player2Label').innerText+'</th></tr></thead><tbody>';
+            tableHtml += '<tr><td class="h5 text-center">' + players.player1.points + '</td><td class="h5 text-center">' + players.player2.points + '</td></tr>';
+            tableHtml += '<tr><td class="h6 text-center">' + players.player1.tpaScore + '</td><td class="h6 text-center">' + players.player2.tpaScore + '</td></tr>';
+            tableHtml += '<tr><td><canvas id="player1canvas" class="w-100"></canvas></td><td><canvas id="player2canvas" class="w-100"></canvas></td></tr>';
+          
+            for (var i = 0; i < Math.max(players.player1.scores.length, players.player2.scores.length); i++) {
+              tableHtml += '<tr>';
+              tableHtml += '<td>' + (players.player1.scores[i+1] || '') + '</td>';
+              tableHtml += '<td>' + (players.player2.scores[i] || '') + '</td>';
+              tableHtml += '</tr>';
+            }
+          
+            tableHtml += '</tbody></table></div>';
+            document.getElementById("results").innerHTML = tableHtml;
+
+            new Chart(document.getElementById('player1canvas').getContext('2d'), {
+                type: 'line',
+                data: {
+                  labels: players.player1.tpaScores.map((_, index) => index + 1), 
+                  datasets: [{
+                    label: 'tpa score',
+                    data: players.player1.tpaScores,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: false
+                  }]
+                },
+                options: {
+                  scales: {
+                    x: {
+                      beginAtZero: true
+                    },
+                    y: {
+                      beginAtZero: true,
+                      min: 0,
+                      max: 1000
+                    }
+                  }
+                }
+            });
+            new Chart(document.getElementById('player2canvas').getContext('2d'), {
+                type: 'line',
+                data: {
+                  labels: players.player2.tpaScores.map((_, index) => index + 1), 
+                  datasets: [{
+                    label: 'tpa score',
+                    data: players.player2.tpaScores,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: false
+                  }]
+                },
+                options: {
+                  scales: {
+                    x: {
+                      beginAtZero: true
+                    },
+                    y: {
+                      beginAtZero: true,
+                      min: 0,
+                      max: 1000
+                    }
+                  }
+                }
+            });
+          
+            document.getElementById("results").style.display = 'flex';
+            document.getElementById("matchContent").style.display = 'none';
+            document.getElementById("endMatch").style.display = 'none';
+          }
+          
 
     </script>
 </body>
