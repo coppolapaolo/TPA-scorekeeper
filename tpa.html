@@ -48,8 +48,8 @@
 
         .circle {
             position: absolute;
-            top: 10%;
-            left: 10%;
+            top: 5%;
+            left: 5%;
             width: 80%;
             height: 80%;
             border-radius: 50%;
@@ -65,6 +65,16 @@
         .container {
             overflow-x: hidden;
         }
+        .canvas-container {
+            width: 80%; 
+            margin: 0 auto; 
+            min-height: calc(1.5em + 1rem); 
+        }
+        
+        .canvas-container canvas {
+            height: 100% !important; 
+            display: block;
+        }        
     </style>
 </head>
 
@@ -100,12 +110,12 @@
             <div id="squareLabels" class="d-flex justify-content-center mb-5" style="display: none;">
                 <div class="border-container">
                     <label id="whiteLabel" class="border"
-                        style="width: 100px; height: 100px; background-color: white; display: flex; justify-content: center; align-items: center; font-size: 40px;"></label>
+                        style="width: 70px; height: 70px; background-color: white; display: flex; justify-content: center; align-items: center; font-size: 28px;"></label>
                     <span id="circle" class="circle" style="display: none;"></span>
                 </div>
                 <label id="grayLabel" class="border"
-                    style="width: 100px; height: 100px; background-color: lightgray; display: flex; justify-content: center; align-items: center; font-size: 40px;"></label>
-            </div>
+                    style="width: 70px; height: 70px; background-color: lightgray; display: flex; justify-content: center; align-items: center; font-size: 28px;"></label>
+            </div> 
             <div id="scoreButtons" class="container" style="display: none;">
                 <!-- Score buttons will be added here by JavaScript -->
             </div>
@@ -661,7 +671,8 @@
             var tableHtml = '<div class="container"><table class="table table-bordered"><thead class="thead-dark"><tr><th class="h4 text-center">'+document.getElementById('player1Label').innerText+'</th><th class="h4 text-center">'+document.getElementById('player2Label').innerText+'</th></tr></thead><tbody>';
             tableHtml += '<tr><td class="h5 text-center">' + players.player1.points + '</td><td class="h5 text-center">' + players.player2.points + '</td></tr>';
             tableHtml += '<tr><td class="h6 text-center">' + players.player1.tpaScore + '</td><td class="h6 text-center">' + players.player2.tpaScore + '</td></tr>';
-            tableHtml += '<tr><td><canvas id="player1canvas" class="w-100"></canvas></td><td><canvas id="player2canvas" class="w-100"></canvas></td></tr>';
+            tableHtml += '<tr><td class="text-center"><div class="canvas-container"><canvas id="player1canvas"></canvas></div></td><td class="text-center"><div class="canvas-container"><canvas id="player2canvas"></canvas></div></td></tr>';
+                
           
             for (var i = 0; i < Math.max(players.player1.scores.length, players.player2.scores.length); i++) {
               tableHtml += '<tr>';
@@ -676,10 +687,10 @@
             new Chart(document.getElementById('player1canvas').getContext('2d'), {
                 type: 'line',
                 data: {
-                  labels: players.player1.tpaScores.map((_, index) => index + 1), 
+                  labels: players.player1.tpaScores.slice(1).map((_, index) => index + 1), 
                   datasets: [{
                     label: 'tpa score',
-                    data: players.player1.tpaScores,
+                    data: players.player1.tpaScores.slice(1),
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1,
                     fill: false
@@ -694,6 +705,11 @@
                       beginAtZero: true,
                       min: 0,
                       max: 1000
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      display: false
                     }
                   }
                 }
@@ -719,6 +735,11 @@
                       beginAtZero: true,
                       min: 0,
                       max: 1000
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      display: false 
                     }
                   }
                 }
