@@ -128,6 +128,7 @@
     </div>
 
     <script>
+        let debugging = false;
         let balls = 9;
         let players = {
             player1: { points: 0, balls: 0, errors: 0, tpaScore: 0 , scores: [], tpaScores: []},
@@ -263,9 +264,9 @@
             players.player2.tpaScore = Math.round(players.player2.balls / (players.player2.errors + players.player2.balls) * 1000);
             document.getElementById('matchScore').innerHTML = '('+players.player1.balls+','+players.player1.errors+','+players.player1.tpaScore+')<strong>'+players.player1.points + ' - ' 
                 + players.player2.points + '</strong>(' + players.player2.balls + ',' + players.player2.errors + ',' + players.player2.tpaScore + ')';  
-            if (isBreakShot) {// just for debugging purposes
+            if (isBreakShot && debugging) {
                 document.getElementById('whiteLabel').style.backgroundColor = 'lightgreen';
-            } else if (!isBreakShotComplete) {
+            } else if (!isBreakShotComplete && debugging) {
                 document.getElementById('whiteLabel').style.backgroundColor = 'lightblue';
             } else {
                 document.getElementById('whiteLabel').style.backgroundColor = 'white';
