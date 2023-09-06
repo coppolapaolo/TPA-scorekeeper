@@ -398,7 +398,7 @@
                                     if (button == lastBalls && lastBalls > 0) {
                                         toggleButtons(['M', 'K', 'S', 'G','p', 'P']);
                                     } else if (button == 0) {
-                                        toggleButtons([]);
+                                        toggleButtons([]); // then switch player
                                     } else {
                                         toggleButtons(['M', 'K', 'S', 'G','P']);
                                         firstShotAfterBreak = false;
