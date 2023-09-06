@@ -3,8 +3,7 @@ name: Upload via FTP
 on:
   push:
     branches:
-      - main  # sostituisci con il nome del tuo branch, se diverso
-
+      - main  
 jobs:
   upload:
     runs-on: ubuntu-latest
@@ -13,10 +12,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       
-    - name: Upload files via FTP
+    - name: Upload tpa.html via FTP
       uses: SamKirkland/FTP-Deploy-Action@4.0.0
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         server-dir: "/path/to/your/server/directory/"
+        local-dir: "./"   # This is the default, means root of your repository
+        exclude: "*"      # Exclude everything
+        include: "tpa.html"  # Include only tpa.html
