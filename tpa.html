@@ -224,14 +224,29 @@
                     }
                 } else if (Array.isArray(arguments[0])) {
                     var tmp = arguments[0];
-                    document.querySelectorAll('.btn-square').forEach(function (btn) {
-                        if (tmp.includes(btn.textContent)) {
-                            btn.style.display = "";
-                            btn.disabled = false;
-                        } else {
-                            btn.style.display = 'none';
-                        }
-                    });
+                    if (tmp[0] == 0) {
+                        document.querySelectorAll('.btn-square').forEach(function (btn) {
+                            if (!isNaN(btn.textContent)) {
+                                btn.style.display = "";
+                                if(parseInt(btn.textContent) > 0 && parseInt(btn.textContent) < tmp[1]) {
+                                    btn.disabled = true;
+                                } else {
+                                    btn.disabled = false;
+                                }
+                            } else {
+                                btn.style.display = 'none';
+                            }
+                        });    
+                    } else {
+                        document.querySelectorAll('.btn-square').forEach(function (btn) {
+                            if (tmp.includes(btn.textContent)) {
+                                btn.style.display = "";
+                                btn.disabled = false;
+                            } else {
+                                btn.style.display = 'none';
+                            }
+                        });    
+                    }
                 }
             } else {
                 var buttonEnabled = arguments[0];
@@ -351,13 +366,14 @@
                                         isBreakShot = false;
                                         isBreakShotComplete = true;
                                     } else if (button < 9) {
-                                        document.getElementById('whiteLabel').innerText = button;
+                                        document.getElementById('whiteLabel').innerHTML = '<sup>' + button + '</sup>'
                                         playersButtonEnabled  = false
-                                        toggleButtons(-button);
+                                        toggleButtons([0,parseInt(button)]); // 0 for pocketing the cue ball. From button+1 to 9 for the round
                                         balls -= button;
                                         players[currentPlayer].balls += parseInt(button);
                                         isBreakShot = false;
                                         isBreakShotComplete = false;
+                                        ballsPocketedInBreak = button;
                                     } else {// the miracle shot
                                         document.getElementById('whiteLabel').innerHTML = '<sup>' + button + '</sup>' + button
                                         document.getElementById('circle').style.display = 'block';
@@ -371,17 +387,24 @@
                                         playersButtonEnabled  = true;
                                     }
                                 } else if (!isBreakShotComplete) {
+                                    document.getElementById('whiteLabel').innerHTML = document.getElementById('whiteLabel').innerHTML + button;
                                     if (button > 0) {
-                                        document.getElementById('whiteLabel').innerHTML = '<sup>' + button + '</sup>' + document.getElementById('whiteLabel').innerHTML;
+                                        balls = balls + (lastBalls - parseInt(button));
+                                        players[currentPlayer].balls = players[currentPlayer].balls - parseInt(lastBalls) + parseInt(button);
+                                    } else {
+                                        players[currentPlayer].balls = players[currentPlayer].balls - parseInt(lastBalls);
+                                        document.getElementById('grayLabel').innerText += 'P';
                                     }
                                     if (button == lastBalls && lastBalls > 0) {
                                         toggleButtons(['M', 'K', 'S', 'G','p', 'P']);
+                                    } else if (button == 0) {
+                                        toggleButtons([]);
                                     } else {
                                         toggleButtons(['M', 'K', 'S', 'G','P']);
                                         firstShotAfterBreak = false;
+                                        lastBalls = button;
                                     }
-                                    playersButtonEnabled  = false;
-                                    ballsPocketedInBreak = button; 
+                                    playersButtonEnabled  = (button == 0);
                                 } else if (switchCauseOfPush) {
                                     firstShotAfterBreak = false;
                                     playersButtonEnabled  = false;
