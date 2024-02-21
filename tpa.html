@@ -433,7 +433,7 @@
                         if (this.getTurn().tpaAnnotation.breakPotted === 9 && this.getTurn().tpaAnnotation.totalPotted === 0) {
                             ballsRemaining = 1;
                         }
-                        let pushed = this.getTurn().isPushed() && this.getTurn().isBreak();
+                        let pushed = this.getTurn().isPushed() && (this.getTurn().isBreak() || (this.getTurn().isPushed() && this.getTurn().previousTurn.isBreak() && this.getTurn().previousTurn.tpaAnnotation.totalPotted === 0 && this.getTurn().tpaAnnotation.totalPotted === 0));
                         this.currentTurn++;
                         this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,false,ballsRemaining));
                         this.getTurn().previousTurn = this.racks[this.currentRack].turns[this.currentTurn-1];
@@ -622,7 +622,8 @@
                         buttonIDs.push('buttonN');
                         buttonIDs.push('buttonP');
                         if (this.tpaAnnotation.safety){
-                            if ((this.breakShot && this.tpaAnnotation.breakPotted === this.tpaAnnotation.totalPotted) || (this.isPushed() && this.tpaAnnotation.totalPotted === 0)) {
+                            console.log("safety");
+                            if ((this.breakShot && this.tpaAnnotation.breakPotted === this.tpaAnnotation.totalPotted) || (this.isPushed() && this.tpaAnnotation.totalPotted === 0) || (this.previousTurn != null && this.previousTurn.isBreak() && this.previousTurn.tpaAnnotation.totalPotted === 0 && this.tpaAnnotation.totalPotted === 0)) {//the push is legal on the first shot, so in three cases: 1) break with breakPotted === totalPotted, 2) push turn before pocketing any balls (totalPotted === 0), 3) previous turn was a break with totalPotted === 0 
                                 buttonIDs.push('buttonp');
                             }
                             if (this.tpaAnnotation.totalPotted > 0) {
@@ -776,7 +777,6 @@
         function togglePlayer(event) {
             // The id of the clicked element is player1Label or player2Label. I extract the character after player and compare it with the currentPlayer. If it is different, I change the currentPlayer.
             if ((event.target.id === 'player1Label' || event.target.id === 'player2Label') && !event.target.id.includes(match.currentPlayer)) {
-                console.log('Hai cliccato su:', event.target.textContent);
                 match.togglePlayer();
                 updateLabels(match.getTurn());
                 updateButtons(match.getTurn());
@@ -830,7 +830,7 @@
                 }
             }
             let whiteLabelText = '';
-            if (turn.tpaAnnotation.breakPotted) {//se breakPotted è definito e non nullo
+            if (turn.tpaAnnotation.breakPotted) {//if breakPotted is defined and not null
                 whiteLabelText += `<sup>${turn.tpaAnnotation.breakPotted}</sup>`;
             }
             whiteLabelText += `${turn.tpaAnnotation.totalPotted !== null ? (turn.tpaAnnotation.totalPotted >= 0 ? turn.tpaAnnotation.totalPotted : '') : ''}`;
@@ -854,13 +854,13 @@
             var confirmation = window.confirm("This will end the match. Are you sure?");
           
             if (!confirmation) return;
-            //costruisce una tabella html con tutti i turni e le annotazioni
-            //nasconde main e endMatch, mostra results
-            // scorre con un for tutti i rack e tutti i turni e li aggiunge alla tabella
-            // la tabella ha due colonne. La prima e' per il primo giocatore, la seconda per il secondo
-            // le intestazioni sono i nomi dei player
-            // in ogni riga compaiono le annotazioni del turno
-            // alla fine del rack si aggiunge una riga larga 2 con lo score del rack
+            // Builds an HTML table with all the turns and annotations
+            // Hides main and endMatch, shows results
+            // Iterates through all the racks and turns and adds them to the table
+            // The table has two columns, one for the first player and one for the second player
+            // The headers are the names of the players
+            // Each row displays the annotations for the turn
+            // At the end of each rack, a wide row with the rack score is added
             const results = document.createElement('table');
             results.classList.add('table');
             results.innerHTML = `
@@ -874,25 +874,23 @@
                 </tbody>
             `;
             const tbody = results.querySelector('tbody');
-            for (let i = 1; i < match.racks.length-1; i++) {//l'ultimo rack è vuoto
+            for (let i = 1; i < match.racks.length-1; i++) {//when calling endMatch the last rack is always empty
                 let row = document.createElement('tr');
                 for (let j = 1; j < match.racks[i].turns.length; j++) {
                     const turn = match.racks[i].turns[j];
-                    // le annotazioni vengono aggiunte in questo modo: una tabella 2x2, con la prima riga unificata con le kick sequence e nella seconda, la prima cella con le annotazioni principali e la seconda con quelle secondarie
-                    //costruisco una nuova tabella senza intestazioni, con la prima riga unificata e la seconda divisa in due
                     if (turn.player === 2) {
                         if (j === 1) {
                             row = document.createElement('tr');
                             row.innerHTML = `<td></td><td>${htmlDivAnnotation(turn)}</td>`;
-                        } else {// non è il primo turno, quindi il secondo player va aggiunto alla riga
+                        } else {// it's not the first turn, so the second player needs to be added to the row
                             row.innerHTML += `<td>${htmlDivAnnotation(turn)}</td>`;
                         }
-                    } else {// il player e' il primo
+                    } else {// the player is the first
                         row = document.createElement('tr');
                         row.innerHTML = `<td>${htmlDivAnnotation(turn)}</td>`;                      
                     }
                     tbody.appendChild(row);
-                    //se il turno è l'ultimo del rack, aggiungo una riga con lo score del rack
+                    //if the turn is the last of the rack, add a row with the rack score
                     if (j === match.racks[i].turns.length - 1) {
                         let scoreRow = document.createElement('tr');
                         scoreRow.innerHTML = `<td colspan="2">${turn.score}</td>`;
@@ -905,6 +903,7 @@
             document.getElementById('endMatch').classList.remove('d-flex');
             document.getElementById('results').style.display = 'block';
         }
+
     </script>
 </body>
 
