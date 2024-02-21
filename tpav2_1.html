@@ -1,0 +1,412 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Player Match</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+    <style>
+        .container {
+            max-width: 960px;
+        }
+
+        .btn {
+            height: 70px;
+            vertical-align: middle;
+        }
+        .circle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            border: 2px solid black;
+            pointer-events: none;
+        }
+            .circle-kick {
+            position: relative;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            border: 2px solid black;
+            padding: 1px;
+        }
+
+        .circle-kick .fs-6 {
+            margin: 0;
+            /* Rimuove il margine predefinito */
+        }
+
+        .circle label, .circle-kick label {
+            margin: 0;
+        }
+
+        .white-label, .gray-label {
+            /* diplay: flex; */
+            justify-content: center;
+            align-items: center;
+            vertical-align: middle;
+            height: 70px;
+            font-size: 1.5em;
+        }
+        .white-label {
+            width: 70px; /* Larghezza di whiteLabel */
+            border: 1px solid black;
+        }
+        .gray-label {
+            width: 35px; /* Larghezza di grayLabel, metà di whiteLabel */
+            background-color: lightgray;
+        }
+        #player1Label, #player2Label, #whiteLabel1, #whiteLabel2, #grayLabel1, #grayLabel2 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 70px; /* Altezza fissa per garantire abbastanza spazio per l'allineamento centrale */
+        }
+        #circle1, #circle2 {
+            position: relative;
+            width: 68px;
+            height: 68px;
+        }
+        .btn-square {
+            width: 50px;
+            height: 50px;
+            margin: 0.3em;
+        }
+
+    
+    </style>
+    <meta charset="utf-8">
+</head>
+
+<body class="p-3 m-0">
+
+    <h3 id="dateTitle" class="text-center mb-3" style="display: block;">DATA</h3>
+        
+    <div class="container text-center">
+        <div class="row  align-items-center">
+            <div id="kicks" class="col-5 offset-6 mb-1">
+                <span class="circle-kick">
+                    <label class="fs-6 col-1">1</label>
+                </span>
+                <label class="fs-6 col-1">1</label>
+                <span class="circle-kick">
+                    <label class="fs-6 col-1">2</label>
+                </span>
+                <label class="fs-6 col-1">2</label>
+                <label class="fs-6 col-1">2</label>
+            </div>
+            <div id="playersGroup" class="col-5 btn-group-vertical offset-1" role="group">
+                <input type="radio" class="btn-check" name="playerOption" id="player1Option" autocomplete="off" checked>
+                <label id="player1Label" class="btn btn-outline-primary mb-3" for="player1Option">Player1</label>
+
+                <input type="radio" class="btn-check" name="playerOption" id="player2Option" autocomplete="off">
+                <label id="player2Label" class="btn btn-outline-primary" for="player2Option">Player2</label>
+            </div>
+            <div class="col-6 align-content-center">
+                <div id="divPlayerLabel1" class="row mb-3 justify-content-start align-items-center">
+                    <div id="divWhiteLabel1" class="d-flex col-5 offset-1 justify-content-end">
+                        <span id="circle1" class="circle">
+                            <label id="whiteLabel1" class="white-label"><sup>3</sup>5M</label>
+                        </span>
+                    </div>
+                    <div id="divGrayLabel1" class="col-3 justify-content-start">
+                        <label id="grayLabel1" class="border gray-label">P</label>
+                    </div>
+                </div>
+
+                <div id="divPlayerLabel2" class="row align-items-center">
+                    <div id="divWhiteLabel2" class="d-flex col-5 offset-1 justify-content-end">
+                        <span id="circle2" class="circle">
+                            <label id="whiteLabel2" class="white-label"><sup>3</sup>5M</label>
+                        </span>
+                    </div>
+                    <div id="divGrayLabel2" class="col-3">
+                        <label id="grayLabel2" class="border gray-label">P</label>
+                    </div>
+                </div>
+            </div>
+            <div id="score" class="col-9 offset-1">(0,0,NaN) <strong>0 - 0</strong> (0,0,NaN)</div>
+        </div>
+        <div id="scoreButtons" class="container mt-2" style="display: block;">
+            <!-- Score buttons will be added here by JavaScript -->
+            <div class="row justify-content-center mb-1">
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">1</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">2</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">3</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">4</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">5</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">6</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">7</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">8</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">9</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">0</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">M</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">K</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">S</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">P</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">G</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">N</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">n</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">x</button>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-secondary btn-square">p</button>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        function formatDateTime(date) {
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0'); // I mesi partono da 0
+            const dd = String(date.getDate()).padStart(2, '0');
+            const hh = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+        }
+
+        class Match {
+            constructor(player1name, player2name) {
+                this.startDate = formatDateTime(new Date()); // Data e ora correnti
+                this.players = [
+                    { name: player1name },
+                    { name: player2name }
+                ];
+                this.score = {
+                    player1: { 
+                        racksWon: 0, 
+                        ballsPotted: 0, 
+                        missErrors: 0, 
+                        breakErrors: 0, 
+                        kickErrors: 0, 
+                        safetyErrors: 0, 
+                        positionError: 0
+                    },
+                    player2: { 
+                        racksWon: 0, 
+                        ballsPotted: 0, 
+                        missErrors: 0, 
+                        breakErrors: 0,
+                        kickErrors: 0,
+                        safetyErrors: 0,
+                        positionError: 0
+                    }
+                };
+                //aggiungo un elemento fittizio ai racks per avere il primo rack con indice 1 e non 0
+                this.racks = [{ turns: []},{ turns: [] }];
+                this.currentRack = 1;
+                this.currentTurn = 1;
+                this.currentPlayer = 1;
+                this.racks[1].turns = [null, new Turn(this.currentPlayer,true,9,null)];
+            }
+
+            togglePlayer() {
+            /*
+            aggiorna il giocatore corrente
+
+            se il turno precedente era un turno vincente, aggiunge un rack al match e inizializza il nuovo turno
+            altrimenti, aggiunge un nuovo turno al rack corrente
+
+            se avevo appena fatto un toggle (il turno corrente non è stato giocato), non aggiunge un nuovo turno, ma semplicemente cambia il player al turno corrente
+            */
+                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+                if (!this.racks[this.currentRack].turns[this.currentTurn].hasBeenPlayed()) {
+                    this.racks[this.currentRack].turns[this.currentTurn].player = this.currentPlayer;
+                } else {
+                    if (this.racks[this.currentRack].turns[this.currentTurn].isWinning()) {
+                        this.racks.push({ turns: [null] });
+                        this.currentRack++;
+                        this.currentTurn = 1;
+                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,9,null));
+                    } else {
+                        this.currentTurn++;
+                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,9,null));
+                    }
+                }
+            }
+        }
+
+        class TPAAnnotation {
+            constructor(totalPotted, breakPotted, mainNote, secondaryNote, kickSequence) {
+                this.totalPotted = totalPotted;
+                this.breakPotted = breakPotted;
+                this.mainNote = mainNote;
+                this.secondaryNote = secondaryNote;
+                this.kickSequence = kickSequence;
+            }
+        }
+        
+        class Turn {
+            constructor(player, breakShot, ballsRemaining, tpaAnnotation) {
+                this.player = player;
+                this.breakShot = breakShot;
+                this.ballsRemaining = ballsRemaining;
+                this.tpaAnnotation = tpaAnnotation;
+                this.winningTurn = false;
+            }
+
+            setWinningTurn() {
+                this.winningTurn = true;
+            }
+
+            isWinning() {
+                return this.winningTurn;
+            }
+
+            hasBeenPlayed() {
+                return this.tpaAnnotation !== null;
+            }
+
+        }
+
+        function updateLabels(turn) {
+            const playerLabel = turn.player === 1 ? 'whiteLabel1' : 'whiteLabel2';
+            const grayLabel = turn.player === 1 ? 'grayLabel1' : 'grayLabel2';
+        
+            document.getElementById(turn.player === 1 ? 'circle1' : 'circle2').style.border = "none";
+
+            if (!turn.tpaAnnotation) {
+                document.getElementById(playerLabel).textContent = '';
+                document.getElementById(grayLabel).textContent = '';
+                if (turn.player === 1) {//reset anche dell'altro
+                    document.getElementById('whiteLabel2').textContent = '';
+                    document.getElementById('grayLabel2').textContent = '';
+                    document.getElementById('circle2').style.border = "none";
+                    document.getElementById('kicks').textContent = '';
+                }
+                return
+            }
+            let whiteLabelText = '';
+            if (turn.tpaAnnotation.breakPotted) {
+                whiteLabelText += `<sup>${turn.tpaAnnotation.breakPotted}</sup>`;
+            }
+            whiteLabelText += `${turn.tpaAnnotation.totalPotted}`;
+            if (turn.tpaAnnotation.mainNote) {
+                whiteLabelText += ` ${turn.tpaAnnotation.mainNote}`;
+            }
+        
+            document.getElementById(playerLabel).innerHTML = whiteLabelText;
+        
+            if (turn.tpaAnnotation.secondaryNote) {
+                document.getElementById(grayLabel).textContent = turn.tpaAnnotation.secondaryNote;
+            }
+
+            if (turn.player === 1) {
+                document.getElementById('kicks').innerHTML = turn.tpaAnnotation.kickSequence;
+            } else {
+                document.getElementById('kicks').innerHTML += turn.tpaAnnotation.kickSequence;
+            }
+        }
+    </script>
+
+    <!-- Script per l'inizializzazione del match al caricamento della pagina -->
+    <script>
+        let match = null;
+
+        // funzione che dato una lista di kick-in e kick-out restituisce una stringa con la sequenza di kick
+        function kickSequence(kickIn) {
+            let kickSequence = '';
+            // kickIn e' una lista di numeri. 1 indica kick-in di player1, 2 indica kick-in di player2, 11 indica kick-in di player1 al primo tiro e va cerchiato, 22 indica kick-in di player2 al primo tiro e va cerchiato
+            for (let i = 0; i < kickIn.length; i++) {
+                if (kickIn[i]>2) 
+                    kickSequence += `<span class="circle-kick"><label class="fs-6 col-1">${kickIn[i]%10}</label></span>`;
+                else
+                    kickSequence += `<label class="fs-6 col-1">${kickIn[i]}</label>`;
+            }
+            return kickSequence;
+        }
+
+        function totalErrors(player) {
+            return player.missErrors + player.breakErrors + player.kickErrors + player.safetyErrors + player.positionError;
+        }
+
+        function tpaScore(player) {
+            return Math.trunc(player.ballsPotted/(player.ballsPotted+totalErrors(player))*1000);
+        }
+
+        function scoreToString(score) {
+            return `('${score.player1.ballsPotted} , ${totalErrors(score.player1)} , ${tpaScore(score.player1)}') <strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong> ('${score.player2.ballsPotted} , ${totalErrors(score.player2)} , ${tpaScore(score.player2)}')`;
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            match = new Match("Mario","Luigi");
+
+            // Sostituisci 'DATA' in dateTitle con startDate
+            document.getElementById('dateTitle').textContent = match.startDate;
+            document.getElementById('player1Label').textContent = match.players[0].name;
+            document.getElementById('player2Label').textContent = match.players[1].name;
+
+            console.log("turno", match.racks[1].turns[1]);
+            updateLabels(match.racks[1].turns[1]);
+            updateLabels(new Turn(2, true, 8, new TPAAnnotation(5, 3, 'M<sup>n</sup>', 'P', kickSequence([11, 1, 2, 2]))));
+            // Qui puoi eseguire ulteriori operazioni con l'oggetto match
+            console.log("Match initialized:", match);
+        });
+
+        function togglePlayer(event) {
+            if ((event.target.id === 'player1Label' || event.target.id === 'player2Label') &&  !event.target.classList.contains('active')) {
+                console.log('Hai cliccato su:', event.target.textContent);
+            }
+            match.togglePlayer();
+        }
+        
+        document.getElementById('playersGroup').addEventListener('click', togglePlayer);
+    </script>
+</body>
+
+</html>
