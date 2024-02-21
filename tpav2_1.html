@@ -39,7 +39,6 @@
 
         .circle-kick .fs-6 {
             margin: 0;
-            /* Rimuove il margine predefinito */
         }
 
         .circle label, .circle-kick label {
@@ -55,18 +54,18 @@
             font-size: 1.5em;
         }
         .white-label {
-            width: 70px; /* Larghezza di whiteLabel */
+            width: 70px; 
             border: 1px solid black;
         }
         .gray-label {
-            width: 35px; /* Larghezza di grayLabel, metà di whiteLabel */
+            width: 35px; /* half of whiteLabel */
             background-color: lightgray;
         }
         #player1Label, #player2Label, #whiteLabel1, #whiteLabel2, #grayLabel1, #grayLabel2 {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 70px; /* Altezza fissa per garantire abbastanza spazio per l'allineamento centrale */
+            height: 70px; /* Fixed height to ensure enough space for center alignment */
         }
         #circle1, #circle2 {
             position: relative;
@@ -78,17 +77,33 @@
             height: 50px;
             margin: 0.3em;
         }
-
+        table, td, th, tr {
+            border: 2px solid black;
+            text-align: center;
+        }
     
     </style>
     <meta charset="utf-8">
 </head>
 
 <body class="p-3 m-0">
+    <form id="playerForm" class="mb-5 d-flex row justify-content-center">
+        <div class="form-group">
+            <label for="player1">Player 1</label>
+            <input type="text" class="form-control" id="player1" placeholder="Inserisci il nome del giocatore 1"
+                onchange="saveNames()">
+        </div>
+        <div class="form-group">
+            <label for="player2">Player 2</label>
+            <input type="text" class="form-control" id="player2" placeholder="Inserisci il nome del giocatore 2"
+                onchange="saveNames()">
+        </div>
+        <button type="button" class="btn btn-primary col-5" style="margin: .5em;" onclick="startMatch()">Start</button>
+    </form>
 
-    <h3 id="dateTitle" class="text-center mb-3" style="display: block;">DATA</h3>
+    <h3 id="dateTitle" class="text-center mb-3" style="display: none;">DATA</h3>
         
-    <div class="container text-center">
+    <div id="main" class="container text-center" style="display: none;">
         <div class="row  align-items-center">
             <div id="kicks" class="col-5 offset-6 mb-1">
                 <span class="circle-kick">
@@ -108,7 +123,7 @@
                 <input type="radio" class="btn-check" name="playerOption" id="player2Option" autocomplete="off">
                 <label id="player2Label" class="btn btn-outline-primary" for="player2Option">Player2</label>
             </div>
-            <div class="col-6 align-content-center">
+            <div id="divPlayers" class="col-6 align-content-center">
                 <div id="divPlayerLabel1" class="row mb-3 justify-content-start align-items-center">
                     <div id="divWhiteLabel1" class="d-flex col-5 offset-1 justify-content-end">
                         <span id="circle1" class="circle">
@@ -134,86 +149,137 @@
             <div id="score" class="col-9 offset-1">(0,0,NaN) <strong>0 - 0</strong> (0,0,NaN)</div>
         </div>
         <div id="scoreButtons" class="container mt-2" style="display: block;">
-            <!-- Score buttons will be added here by JavaScript -->
-            <div class="row justify-content-center mb-1">
+            <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">1</button>
+                    <button type="button" id="button1" class="btn btn-secondary btn-square">1</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">2</button>
+                    <button type="button" id="button2" class="btn btn-secondary btn-square">2</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">3</button>
+                    <button type="button" id="button3" class="btn btn-secondary btn-square">3</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">4</button>
+                    <button type="button" id="button4" class="btn btn-secondary btn-square">4</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">5</button>
+                    <button type="button" id="button5" class="btn btn-secondary btn-square">5</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">6</button>
+                    <button type="button" id="button6" class="btn btn-secondary btn-square">6</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">7</button>
+                    <button type="button" id="button7" class="btn btn-secondary btn-square">7</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">8</button>
+                    <button type="button" id="button8" class="btn btn-secondary btn-square">8</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">9</button>
+                    <button type="button" id="button9" class="btn btn-secondary btn-square">9</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">0</button>
+                    <button type="button" id="button0" class="btn btn-secondary btn-square">0</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
             </div>
             <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">M</button>
+                    <button type="button" id="buttonM" class="btn btn-secondary btn-square">M</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">K</button>
+                    <button type="button" id="buttonK" class="btn btn-secondary btn-square">K</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">S</button>
+                    <button type="button" id="buttonS" class="btn btn-secondary btn-square">S</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">P</button>
+                    <button type="button" id="buttonP" class="btn btn-secondary btn-square">P</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">G</button>
+                    <button type="button" id="buttonG" class="btn btn-secondary btn-square">G</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">N</button>
+                    <button type="button" id="buttonN" class="btn btn-secondary btn-square">N</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">n</button>
+                    <button type="button" id="buttonn" class="btn btn-secondary btn-square">n</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">x</button>
+                    <button type="button" id="buttonx" class="btn btn-secondary btn-square">x</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" class="btn btn-secondary btn-square">p</button>
+                    <button type="button" id="buttonp" class="btn btn-secondary btn-square">p</button>
                 </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-5">
+                    <button type="button" id="buttonK-in" class="btn btn-secondary" style="width: 150px; height: 40px; margin: 0.3em">first shot kick-in</button>
+                </div>
+            </div>
         </div>
     </div>
+    <div id="endMatch" class="justify-content-center" style="display: none;">
+        <button type="button" class="btn btn-primary col-7" onclick="endMatch()">End Match</button>
+    </div>
+    <div id="results" class="container justify-content-center mb-5 flex-column" style="display: none;">
+    </div>
+
 
     <script>
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        window.onload = function () {
+            var player1 = getCookie('player1');
+            if (player1 != "") {
+                document.getElementById('player1').value = player1;
+            }
+
+            var player2 = getCookie('player2');
+            if (player2 != "") {
+                document.getElementById('player2').value = player2;
+            }
+        };
+
+        function saveNames() {
+            var player1 = document.getElementById('player1').value;
+            var player2 = document.getElementById('player2').value;
+
+            var d = new Date();
+            d.setTime(d.getTime() + (60 * 60 * 24 * 60 * 1000)); // Two months
+            var expires = "expires=" + d.toUTCString();
+
+            document.cookie = "player1=" + player1 + ";" + expires + ";path=/";
+            document.cookie = "player2=" + player2 + ";" + expires + ";path=/";
+        }
+
         function formatDateTime(date) {
             const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0'); // I mesi partono da 0
+            const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months start from 0
             const dd = String(date.getDate()).padStart(2, '0');
             const hh = String(date.getHours()).padStart(2, '0');
             const min = String(date.getMinutes()).padStart(2, '0');
@@ -222,7 +288,7 @@
 
         class Match {
             constructor(player1name, player2name) {
-                this.startDate = formatDateTime(new Date()); // Data e ora correnti
+                this.startDate = formatDateTime(new Date()); // Current date and time
                 this.players = [
                     { name: player1name },
                     { name: player2name }
@@ -247,57 +313,341 @@
                         positionError: 0
                     }
                 };
-                //aggiungo un elemento fittizio ai racks per avere il primo rack con indice 1 e non 0
-                this.racks = [{ turns: []},{ turns: [] }];
+                // add a dummy element to the racks to have the first rack with index 1 instead of 0
+                this.racks = [null];
                 this.currentRack = 1;
                 this.currentTurn = 1;
                 this.currentPlayer = 1;
-                this.racks[1].turns = [null, new Turn(this.currentPlayer,true,9,null)];
+                this.racks.push({turns:[null, new Turn(this.currentPlayer,true,9)]});
+            }
+
+            annotate(event) {// button listener
+                // buttons have ids buttonX where X is a number or a letter
+                const buttonID = event.target.id;
+                const buttonValue = parseInt(buttonID[6]);
+                if (buttonValue === 0) {
+                    this.getTurn().tpaAnnotation.totalPotted = 0;
+                    if (this.getTurn().isBreak()) {
+                        this.getTurn().tpaAnnotation.breakPotted = this.getTurn().tpaAnnotation.breakPotted === null ? 0 : this.getTurn().tpaAnnotation.breakPotted;
+                    }
+                } else if (!isNaN(buttonValue)) {
+                    if (this.getTurn().isBreak()) {
+                        if (this.getTurn().tpaAnnotation.breakPotted === null) {
+                            this.getTurn().tpaAnnotation.breakPotted = buttonValue;
+                        } else {
+                            this.getTurn().tpaAnnotation.totalPotted = buttonValue;
+                        }
+                    } else {
+                        this.getTurn().tpaAnnotation.totalPotted = buttonValue;
+                    }
+                } else {
+                    switch (buttonID) {
+                        case 'buttonM':
+                            this.getTurn().tpaAnnotation.missErrors = 1;
+                            this.getTurn().tpaAnnotation.safety = false;
+                            this.getTurn().tpaAnnotation.kick = false;
+                            break;
+                        case 'buttonK':
+                            this.getTurn().tpaAnnotation.kick = true;
+                            this.getTurn().tpaAnnotation.missErrors = 0;
+                            this.getTurn().tpaAnnotation.safety = false;
+                            break;
+                        case 'buttonS':
+                            this.getTurn().tpaAnnotation.safety = true;
+                            this.getTurn().tpaAnnotation.kick = false;
+                            this.getTurn().tpaAnnotation.missErrors = 0;
+                            break;
+                        case 'buttonG':
+                            this.getTurn().setWinningTurn();
+                            break;
+                        case 'buttonP':
+                            this.getTurn().tpaAnnotation.pocketed = this.getTurn().tpaAnnotation.pocketed === null ? true : !this.getTurn().tpaAnnotation.pocketed;
+                            this.getTurn().tpaAnnotation.noHit = false;
+                            break;
+                        case 'buttonN':
+                            this.getTurn().tpaAnnotation.noHit = this.getTurn().tpaAnnotation.noHit === null ? true : !this.getTurn().tpaAnnotation.noHit;
+                            this.getTurn().tpaAnnotation.pocketed = false;
+                            break;
+                        case 'buttonn': 
+                            this.getTurn().tpaAnnotation.missErrors =  this.getTurn().tpaAnnotation.missErrors === 2 ? 1 : 2;
+                            break;
+                        case 'buttonx': 
+                            this.getTurn().tpaAnnotation.safeX = this.getTurn().tpaAnnotation.safeX === null ? true : !this.getTurn().tpaAnnotation.safeX;
+                            this.getTurn().tpaAnnotation.push = false;
+                            break;
+                        case 'buttonp': 
+                            this.getTurn().tpaAnnotation.push = this.getTurn().tpaAnnotation.push === null ? true : !this.getTurn().tpaAnnotation.push;
+                            this.getTurn().pushed = this.getTurn().tpaAnnotation.push;
+                            this.getTurn().tpaAnnotation.safeX = false;
+                            break;
+                    }
+                }
+                updateLabels(this.getTurn());
+                updateButtons(this.getTurn());
+
+            }
+
+            getTurn() {
+                return this.racks[this.currentRack].turns[this.currentTurn];
+            }
+
+            canSwitchPlayer() {
+                if (!this.getTurn().hasBeenPlayed()) {
+                    return this.getTurn().isBreak() && this.getTurn().tpaAnnotation.breakPotted === null;
+                } else if (this.getTurn().isWinning()) {
+                    return true;
+                } else if (this.getTurn().isBreak() && this.getTurn().tpaAnnotation.breakPotted === 0 && this.getTurn().tpaAnnotation.totalPotted === 0) {
+                    return true;
+                } else if(this.getTurn().isBreak() && this.getTurn().tpaAnnotation.breakPotted > 0 && this.getTurn().tpaAnnotation.totalPotted === 0 && (this.getTurn().tpaAnnotation.noHit || this.getTurn().tpaAnnotation.pocketed)) {
+                    return true;
+                } else if (!this.getTurn().tpaAnnotation.kick && !this.getTurn().tpaAnnotation.safety && !this.getTurn().tpaAnnotation.missErrors) {
+                    return false;
+                } else return true;
             }
 
             togglePlayer() {
             /*
-            aggiorna il giocatore corrente
+            Updates the current player.
 
-            se il turno precedente era un turno vincente, aggiunge un rack al match e inizializza il nuovo turno
-            altrimenti, aggiunge un nuovo turno al rack corrente
+            If the previous turn was a winning turn, adds a new rack to the match and initializes a new turn.
+            Otherwise, adds a new turn to the current rack.
 
-            se avevo appena fatto un toggle (il turno corrente non è stato giocato), non aggiunge un nuovo turno, ma semplicemente cambia il player al turno corrente
+            If a toggle was just performed (the current turn has not been played), it simply changes the player of the current turn without adding a new turn.
+
+            Also updates the score based on the annotations and the potential winning of the turn.
             */
                 this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
-                if (!this.racks[this.currentRack].turns[this.currentTurn].hasBeenPlayed()) {
+                if (!this.racks[this.currentRack].turns[this.currentTurn].hasBeenPlayed() && this.getTurn().isBreak()) {
                     this.racks[this.currentRack].turns[this.currentTurn].player = this.currentPlayer;
                 } else {
+                    this.updateScore(this.racks[this.currentRack].turns[this.currentTurn]);
+                    this.getTurn().score = scoreToString(this.score);
                     if (this.racks[this.currentRack].turns[this.currentTurn].isWinning()) {
                         this.racks.push({ turns: [null] });
                         this.currentRack++;
                         this.currentTurn = 1;
-                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,9,null));
+                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,9));
                     } else {
+                        let ballsRemaining = this.getTurn().ballsRemaining - Math.max(this.getTurn().tpaAnnotation.totalPotted,this.getTurn().tpaAnnotation.breakPotted);
+                        // Almost impossible case of 9 balls potted on the break and cue ball in pocket or foul
+                        if (this.getTurn().tpaAnnotation.breakPotted === 9 && this.getTurn().tpaAnnotation.totalPotted === 0) {
+                            ballsRemaining = 1;
+                        }
+                        let pushed = this.getTurn().isPushed() && this.getTurn().isBreak();
                         this.currentTurn++;
-                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,9,null));
+                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,false,ballsRemaining));
+                        this.getTurn().previousTurn = this.racks[this.currentRack].turns[this.currentTurn-1];
+                        if (pushed) {
+                            this.getTurn().push();
+                        }
                     }
                 }
+            }
+
+            updateScore(turn) {
+                /* Calculate errors:
+                - breakErrors: if it's a break and ended with noHit or pocketed
+                - missErrors: if it's a miss. It can be 1 or 2
+                - kickErrors: if it's a kick ended with noHit or pocketed
+                - safetyErrors: calculated for the player of the previous turn, if they made a safety and the current player has potted at least one ball. If kick-in, it's not counted
+                - positionError: if it's not a missError of 2, if it's not safeX, hasn't won, and has potted at least one ball (unless it's a safe or a push with totalpotted > 0 but === to breakpotted). Or if pocketed is true or noHit is true, but not kick or break
+                */ 
+                const scorePlayer = this.score[`player${turn.player}`];
+                if (turn.isWinning()) {
+                    scorePlayer.racksWon++;
+                }
+                //update missErrors
+                if (turn.tpaAnnotation.missErrors) {
+                    scorePlayer.missErrors+=turn.tpaAnnotation.missErrors;
+                }
+                //update breakErrors
+                if (turn.isBreak() && (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed)) {
+                    scorePlayer.breakErrors++;
+                }
+                //update kickErrors
+                if (turn.tpaAnnotation.kick && (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed)) {
+                    scorePlayer.kickErrors++;
+                }
+                // Update safetyErrors only if it's not the first turn
+                if (this.currentTurn > 1) {
+                    const previousTurn = this.racks[this.currentRack].turns[this.currentTurn-1];
+                    // here I assume that only kick-ins are recorded on the first shot
+                    if (previousTurn.tpaAnnotation.safety && turn.tpaAnnotation.totalPotted > 0 && turn.tpaAnnotation.kickSequence.length === 0) {
+                        this.score[`player${previousTurn.player}`].safetyErrors++;
+                    }
+                }
+                //update positionError
+                if (turn.tpaAnnotation.missErrors !== 2 && !turn.tpaAnnotation.safeX && !turn.isWinning() && turn.tpaAnnotation.totalPotted > 0) {
+                    if (turn.tpaAnnotation.breakPotted != turn.tpaAnnotation.totalPotted) {
+                        scorePlayer.positionError++;
+                    }
+                } else if (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit) {
+                    if (!turn.tpaAnnotation.kick && !turn.tpaAnnotation.safety && !turn.tpaAnnotation.missErrors) {
+                        scorePlayer.positionError++;
+                    }
+                }
+                scorePlayer.ballsPotted += turn.tpaAnnotation.totalPotted;
             }
         }
 
         class TPAAnnotation {
-            constructor(totalPotted, breakPotted, mainNote, secondaryNote, kickSequence) {
-                this.totalPotted = totalPotted;
-                this.breakPotted = breakPotted;
-                this.mainNote = mainNote;
-                this.secondaryNote = secondaryNote;
-                this.kickSequence = kickSequence;
+
+            constructor() {
+                this.totalPotted = null;
+                this.breakPotted = null;
+                this.missErrors = null;// can be 0, 1, 2
+                this.kick = null;
+                this.pocketed = null;
+                this.safety = null;
+                this.push = null;
+                this.safeX = null;
+                this.noHit = null;
+                this.kickSequence = [];
+            }
+
+            reset() {
+                this.totalPotted = null;
+                this.breakPotted = null;
+                this.missErrors = null;
+                this.kick = null;
+                this.pocketed = null;
+                this.safety = null;
+                this.push = null;
+                this.safeX = null;
+                this.noHit = null;
+                this.kickSequence = [];
+            }
+
+            ballsAnnotated() {
+                return this.totalPotted !== null;
+            }
+
+
+            mainNote() {
+                if (this.kick) {
+                    return 'K';
+                } else if (this.safety) {
+                    if (this.safeX) {
+                        return 'S<sup>x</sup>';
+                    } else if (this.push) {
+                        return 'S<sup>p</sup>';
+                    } else {
+                        return 'S';
+                    }
+                } else if (this.missErrors == 2) {
+                    return 'M<sup>n</sup>';
+                } else if (this.missErrors == 1) {
+                    return 'M';
+                }
+                return '';
+            }
+
+            secondaryNote() {
+                if (this.noHit) {
+                    return 'N';
+                } else if (this.pocketed) {
+                    return 'P';
+                }
+                return '';
+            }
+
+            hasKickIn() {
+                return this.kickSequence.length > 0;
+            }
+        }
+
+        class KickIn {
+            constructor(player, isFirst) {
+                this.player = player;
+                this.isFirst = isFirst;
             }
         }
         
         class Turn {
-            constructor(player, breakShot, ballsRemaining, tpaAnnotation) {
+            constructor(player, breakShot, ballsRemaining) {
+                /* breakShot is a boolean, ballsRemaining is an integer, tpaAnnotation is a TPAAnnotation object */
                 this.player = player;
                 this.breakShot = breakShot;
                 this.ballsRemaining = ballsRemaining;
-                this.tpaAnnotation = tpaAnnotation;
+                this.tpaAnnotation = new TPAAnnotation();
+                this.pushed = false;
                 this.winningTurn = false;
+                this.previousTurn = null;
+                this.score = null;
+            } 
+
+            showButtons() {
+                // Returns the buttons to be displayed
+                const buttonIDs = [];
+                /* There are 3 phases:
+                1) Annotate the balls. If the balls are not annotated (breakPotted === null), show all buttons from 0 to ballsRemaining.
+                    1.a) If it's a break (this.breakshot), there are two phases of ball annotation.
+                        1.a.1) Annotate the balls potted on the break. (breakPotted === null), show all buttons from 0 to ballsRemaining.
+                        1.a.2) Annotate the balls potted on the turn. (breakPotted != null and totalPotted === null), show only buttons 0 and from breakPotted to ballsRemaining. Zero if the cue ball is pocketed.
+                2) Main annotation.
+                3) Secondary annotation.
+                */
+                if (this.isWinning() || (this.tpaAnnotation.push)) {
+                    if (this.isWinning() && this.previousTurn != null && (this.previousTurn.tpaAnnotation.safeX || this.previousTurn.tpaAnnotation.push || this.previousTurn.tpaAnnotation.safety) && this.tpaAnnotation.kickSequence.length === 0) {
+                        buttonIDs.push('buttonK-in');
+                    }           
+                    return buttonIDs;
+                }
+                if (!this.tpaAnnotation.ballsAnnotated()) {
+                    if (!this.breakShot || this.tpaAnnotation.breakPotted === null) {
+                        for (let i = 0; i <= this.ballsRemaining; i++) {
+                            buttonIDs.push(`button${i}`);
+                        }
+                    } else {
+                        buttonIDs.push('button0');
+                        for (let i = this.tpaAnnotation.breakPotted; i <= this.ballsRemaining; i++) {
+                            buttonIDs.push(`button${i}`);
+                        }
+                    } 
+                } else if (!this.tpaAnnotation.noHit && !this.tpaAnnotation.pocketed) {
+                    if (this.breakShot && this.tpaAnnotation.totalPotted === 0) {//special case where the break shot didn't pocket anything
+                        buttonIDs.push('buttonN');
+                        buttonIDs.push('buttonP');
+                    } else if (!this.tpaAnnotation.safety && !this.tpaAnnotation.missErrors && !this.tpaAnnotation.kick) {
+                        if (this.tpaAnnotation.breakPotted <= this.tpaAnnotation.totalPotted && this.tpaAnnotation.totalPotted > 0) {
+                            buttonIDs.push('buttonG');
+                            if (this.previousTurn != null && (this.previousTurn.tpaAnnotation.safeX || this.previousTurn.tpaAnnotation.push || this.previousTurn.tpaAnnotation.safety) && this.tpaAnnotation.kickSequence.length === 0) {
+                                buttonIDs.push('buttonK-in');
+                            }                            
+                        }
+                        buttonIDs.push('buttonM');
+                        buttonIDs.push('buttonK');
+                        buttonIDs.push('buttonS');
+                    } else {
+                        buttonIDs.push('buttonN');
+                        buttonIDs.push('buttonP');
+                        if (this.tpaAnnotation.safety){
+                            if ((this.breakShot && this.tpaAnnotation.breakPotted === this.tpaAnnotation.totalPotted) || (this.isPushed() && this.tpaAnnotation.totalPotted === 0)) {
+                                buttonIDs.push('buttonp');
+                            }
+                            if (this.tpaAnnotation.totalPotted > 0) {
+                                buttonIDs.push('buttonx');
+                            }
+                        } else if (this.tpaAnnotation.missErrors === 1) {
+                            buttonIDs.push('buttonN');
+                            buttonIDs.push('buttonP');
+                            buttonIDs.push('buttonn');
+                        }
+                    }
+                }
+                return buttonIDs;
+            }
+
+            isBreak() {
+                return this.breakShot;
+            }
+
+            push() {
+                this.pushed = true;
+            }
+
+            isPushed() {
+                return this.pushed;
             }
 
             setWinningTurn() {
@@ -305,68 +655,108 @@
             }
 
             isWinning() {
-                return this.winningTurn;
+                return this.winningTurn = this.winningTurn || this.ballsRemaining === 0 || this.ballsRemaining === this.tpaAnnotation.totalPotted;
             }
 
             hasBeenPlayed() {
-                return this.tpaAnnotation !== null;
+                return this.tpaAnnotation.ballsAnnotated();
             }
 
+        }
+
+        function updateButtons(turn) {
+            const buttonIDs = [];
+            const buttonToShow = turn.showButtons();
+            // add the ids of the buttons that are inside the scoreButtons div
+            // get all the button children of scoreButtons
+            const buttons = document.getElementById('scoreButtons').querySelectorAll('button');
+            // for each button, add the id to the buttonIDs array
+            buttons.forEach(button => buttonIDs.push(button.id));
+            // Based on ballsRemaining, hide buttons with an id greater than ballsRemaining. If the button has an id buttonX with X non-numeric, ignore it.
+            buttonIDs.forEach(buttonID => {
+                if (buttonToShow.includes(buttonID)) {
+                    document.getElementById(buttonID).style.display = 'block';
+                } else {
+                    document.getElementById(buttonID).style.display = 'none';
+                }
+            });
+            
+            updateSwitchPlayerStatus();
+            document.getElementById('endMatch').classList.remove('d-flex');//controllare??
         }
 
         function updateLabels(turn) {
             const playerLabel = turn.player === 1 ? 'whiteLabel1' : 'whiteLabel2';
             const grayLabel = turn.player === 1 ? 'grayLabel1' : 'grayLabel2';
-        
-            document.getElementById(turn.player === 1 ? 'circle1' : 'circle2').style.border = "none";
 
-            if (!turn.tpaAnnotation) {
-                document.getElementById(playerLabel).textContent = '';
-                document.getElementById(grayLabel).textContent = '';
-                if (turn.player === 1) {//reset anche dell'altro
-                    document.getElementById('whiteLabel2').textContent = '';
-                    document.getElementById('grayLabel2').textContent = '';
-                    document.getElementById('circle2').style.border = "none";
-                    document.getElementById('kicks').textContent = '';
-                }
-                return
+            document.getElementById(turn.player === 1 ? 'circle1' : 'circle2').style.border = turn.isWinning() ? "2px solid black" : "none";
+
+            if (turn.player === 1) {//reset of both players' labels
+                document.getElementById('whiteLabel2').textContent = '';
+                document.getElementById('grayLabel2').textContent = '';
+                document.getElementById('circle2').style.border = "none";
+                document.getElementById('kicks').textContent = '';
             }
+
             let whiteLabelText = '';
-            if (turn.tpaAnnotation.breakPotted) {
+            if (turn.tpaAnnotation.breakPotted) {//if breakPotted is defined and not null
                 whiteLabelText += `<sup>${turn.tpaAnnotation.breakPotted}</sup>`;
             }
-            whiteLabelText += `${turn.tpaAnnotation.totalPotted}`;
-            if (turn.tpaAnnotation.mainNote) {
-                whiteLabelText += ` ${turn.tpaAnnotation.mainNote}`;
-            }
+            whiteLabelText += `${turn.tpaAnnotation.totalPotted !== null ? (turn.tpaAnnotation.totalPotted >= 0 ? turn.tpaAnnotation.totalPotted : '') : ''}`;
+            whiteLabelText += ` ${turn.tpaAnnotation.mainNote()}`;
         
             document.getElementById(playerLabel).innerHTML = whiteLabelText;
         
-            if (turn.tpaAnnotation.secondaryNote) {
-                document.getElementById(grayLabel).textContent = turn.tpaAnnotation.secondaryNote;
-            }
+            document.getElementById(grayLabel).textContent = turn.tpaAnnotation.secondaryNote();
 
             if (turn.player === 1) {
-                document.getElementById('kicks').innerHTML = turn.tpaAnnotation.kickSequence;
+                document.getElementById('kicks').innerHTML = kickSequence(turn.tpaAnnotation.kickSequence);
             } else {
-                document.getElementById('kicks').innerHTML += turn.tpaAnnotation.kickSequence;
+                if (turn.previousTurn) {
+                    document.getElementById('kicks').innerHTML = kickSequence(turn.previousTurn.tpaAnnotation.kickSequence);
+                }
+                document.getElementById('kicks').innerHTML += kickSequence(turn.tpaAnnotation.kickSequence);
             }
         }
     </script>
 
-    <!-- Script per l'inizializzazione del match al caricamento della pagina -->
     <script>
         let match = null;
 
-        // funzione che dato una lista di kick-in e kick-out restituisce una stringa con la sequenza di kick
+        function startMatch() {
+            match = new Match(getCookie('player1'),getCookie('player2'));
+
+            document.getElementById('dateTitle').style.display = 'block';
+            document.getElementById('main').style.display = 'block';
+            document.getElementById('playerForm').style.display = 'none';
+            document.getElementById('playerForm').classList.remove('d-flex');
+            
+            document.getElementById('dateTitle').textContent = match.startDate;
+            document.getElementById('player1Label').textContent = match.players[0].name;
+            document.getElementById('player2Label').textContent = match.players[1].name;
+
+            const buttons = document.getElementById('scoreButtons').querySelectorAll('button.btn-square');
+            // for each button, add match's annotate function as a listener
+            buttons.forEach(button => button.addEventListener('click', match.annotate.bind(match)));
+            // add a listener to kick-in button that adds the kick sequence on click
+            document.getElementById('buttonK-in').addEventListener('click', function() {
+                match.getTurn().tpaAnnotation.kickSequence.push(new KickIn(match.currentPlayer, true));
+                updateLabels(match.getTurn());
+                updateButtons(match.getTurn());
+            });
+
+            updateLabels(match.getTurn());
+            updateButtons(match.getTurn());
+        }
+
+        // Function that takes a list of kick-ins and kick-outs and returns a string with the kick sequence
         function kickSequence(kickIn) {
             let kickSequence = '';
-            // kickIn e' una lista di numeri. 1 indica kick-in di player1, 2 indica kick-in di player2, 11 indica kick-in di player1 al primo tiro e va cerchiato, 22 indica kick-in di player2 al primo tiro e va cerchiato
             for (let i = 0; i < kickIn.length; i++) {
-                if (kickIn[i]>2) 
-                    kickSequence += `<span class="circle-kick"><label class="fs-6 col-1">${kickIn[i]%10}</label></span>`;
+                if (kickIn[i].isFirst) 
+                    kickSequence += `<span class="circle-kick"><label class="fs-6 col-1">${kickIn[i].player}</label></span>`;
                 else
-                    kickSequence += `<label class="fs-6 col-1">${kickIn[i]}</label>`;
+                    kickSequence += `<label class="fs-6 col-1">${kickIn[i].player}</label>`;
             }
             return kickSequence;
         }
@@ -380,32 +770,141 @@
         }
 
         function scoreToString(score) {
-            return `('${score.player1.ballsPotted} , ${totalErrors(score.player1)} , ${tpaScore(score.player1)}') <strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong> ('${score.player2.ballsPotted} , ${totalErrors(score.player2)} , ${tpaScore(score.player2)}')`;
+            return `(${score.player1.ballsPotted} , ${totalErrors(score.player1)} , ${tpaScore(score.player1)}) <strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong> (${score.player2.ballsPotted} , ${totalErrors(score.player2)} , ${tpaScore(score.player2)})`;
         }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            match = new Match("Mario","Luigi");
-
-            // Sostituisci 'DATA' in dateTitle con startDate
-            document.getElementById('dateTitle').textContent = match.startDate;
-            document.getElementById('player1Label').textContent = match.players[0].name;
-            document.getElementById('player2Label').textContent = match.players[1].name;
-
-            console.log("turno", match.racks[1].turns[1]);
-            updateLabels(match.racks[1].turns[1]);
-            updateLabels(new Turn(2, true, 8, new TPAAnnotation(5, 3, 'M<sup>n</sup>', 'P', kickSequence([11, 1, 2, 2]))));
-            // Qui puoi eseguire ulteriori operazioni con l'oggetto match
-            console.log("Match initialized:", match);
-        });
 
         function togglePlayer(event) {
-            if ((event.target.id === 'player1Label' || event.target.id === 'player2Label') &&  !event.target.classList.contains('active')) {
+            // The id of the clicked element is player1Label or player2Label. I extract the character after player and compare it with the currentPlayer. If it is different, I change the currentPlayer.
+            if ((event.target.id === 'player1Label' || event.target.id === 'player2Label') && !event.target.id.includes(match.currentPlayer)) {
                 console.log('Hai cliccato su:', event.target.textContent);
+                match.togglePlayer();
+                updateLabels(match.getTurn());
+                updateButtons(match.getTurn());
+                //score update
+                document.getElementById('score').innerHTML = scoreToString(match.score);
+                // If the current turn is a break, show endMatch, otherwise hide it
+                if (match.getTurn().isBreak()) {
+                    document.getElementById('endMatch').classList.add('d-flex');
+                } else {
+                    document.getElementById('endMatch').classList.remove('d-flex');
+                }
             }
-            match.togglePlayer();
         }
         
+        function updateSwitchPlayerStatus() {
+            const radioButtons = document.querySelectorAll('#playersGroup input[type="radio"]');
+            const labelsForRadioButtons = document.querySelectorAll('#playersGroup label');
+            const canSwitch = match.canSwitchPlayer();
+        
+            // Enable or disable the radio buttons based on the checkbox
+            radioButtons.forEach(radio => {
+                radio.disabled = !canSwitch;
+                if (radio.id === `player${match.currentPlayer}Option`) {
+                    radio.checked = true;
+                }
+            });
+                
+            // Update the style of the labels to reflect the disabled state
+            labelsForRadioButtons.forEach(label => {
+                if (!canSwitch) {
+                    label.classList.add('disabled');
+                } else {
+                    label.classList.remove('disabled');
+                }
+            });
+        }
+
         document.getElementById('playersGroup').addEventListener('click', togglePlayer);
+        // Add a click listener to divPlayers that resets the current turn
+        document.getElementById('divPlayers').addEventListener('click', function() {
+            match.racks[match.currentRack].turns[match.currentTurn].tpaAnnotation.reset();
+            updateLabels(match.getTurn());
+            updateButtons(match.getTurn());
+        });
+
+        function htmlDivAnnotation(turn) {
+            let kickSequence = '&nbsp;';
+            for (let i = 0; i < turn.tpaAnnotation.kickSequence.length; i++) {
+                if (turn.tpaAnnotation.kickSequence[i].player === turn.player) {
+                    kickSequence += `<span class="circle-kick"><label class="col-1">${turn.tpaAnnotation.kickSequence[i].player}</label></span>`;
+                }
+            }
+            let whiteLabelText = '';
+            if (turn.tpaAnnotation.breakPotted) {//se breakPotted è definito e non nullo
+                whiteLabelText += `<sup>${turn.tpaAnnotation.breakPotted}</sup>`;
+            }
+            whiteLabelText += `${turn.tpaAnnotation.totalPotted !== null ? (turn.tpaAnnotation.totalPotted >= 0 ? turn.tpaAnnotation.totalPotted : '') : ''}`;
+            whiteLabelText += ` ${turn.tpaAnnotation.mainNote()}`;
+            let circleBorder = turn.isWinning() ? "2px solid black" : "none";
+            return `<div class="mb-1">${kickSequence}</div>
+                    <div class="align-items-center">
+                        <div class="row">
+                            <div class="d-flex justify-content-center">
+                                <span class="circle" style="border: ${circleBorder}">
+                                    <label class="white-label d-flex">${whiteLabelText}</label>
+                                </span>
+                                <label class="border gray-label d-flex">${turn.tpaAnnotation.secondaryNote()}</label>
+                            </div>
+                        </div>
+                    </div>`;
+
+        }
+
+        function endMatch() {
+            var confirmation = window.confirm("This will end the match. Are you sure?");
+          
+            if (!confirmation) return;
+            //costruisce una tabella html con tutti i turni e le annotazioni
+            //nasconde main e endMatch, mostra results
+            // scorre con un for tutti i rack e tutti i turni e li aggiunge alla tabella
+            // la tabella ha due colonne. La prima e' per il primo giocatore, la seconda per il secondo
+            // le intestazioni sono i nomi dei player
+            // in ogni riga compaiono le annotazioni del turno
+            // alla fine del rack si aggiunge una riga larga 2 con lo score del rack
+            const results = document.createElement('table');
+            results.classList.add('table');
+            results.innerHTML = `
+                <thead>
+                    <tr>
+                        <th scope="col">${match.players[0].name}</th>
+                        <th scope="col">${match.players[1].name}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            `;
+            const tbody = results.querySelector('tbody');
+            for (let i = 1; i < match.racks.length-1; i++) {//l'ultimo rack è vuoto
+                let row = document.createElement('tr');
+                for (let j = 1; j < match.racks[i].turns.length; j++) {
+                    const turn = match.racks[i].turns[j];
+                    // le annotazioni vengono aggiunte in questo modo: una tabella 2x2, con la prima riga unificata con le kick sequence e nella seconda, la prima cella con le annotazioni principali e la seconda con quelle secondarie
+                    //costruisco una nuova tabella senza intestazioni, con la prima riga unificata e la seconda divisa in due
+                    if (turn.player === 2) {
+                        if (j === 1) {
+                            row = document.createElement('tr');
+                            row.innerHTML = `<td></td><td>${htmlDivAnnotation(turn)}</td>`;
+                        } else {// non è il primo turno, quindi il secondo player va aggiunto alla riga
+                            row.innerHTML += `<td>${htmlDivAnnotation(turn)}</td>`;
+                        }
+                    } else {// il player e' il primo
+                        row = document.createElement('tr');
+                        row.innerHTML = `<td>${htmlDivAnnotation(turn)}</td>`;                      
+                    }
+                    tbody.appendChild(row);
+                    //se il turno è l'ultimo del rack, aggiungo una riga con lo score del rack
+                    if (j === match.racks[i].turns.length - 1) {
+                        let scoreRow = document.createElement('tr');
+                        scoreRow.innerHTML = `<td colspan="2">${turn.score}</td>`;
+                        tbody.appendChild(scoreRow);
+                    }
+                }
+            }
+            document.getElementById('results').appendChild(results);
+            document.getElementById('main').style.display = 'none';
+            document.getElementById('endMatch').classList.remove('d-flex');
+            document.getElementById('results').style.display = 'block';
+        }
     </script>
 </body>
 
