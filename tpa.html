@@ -400,7 +400,7 @@
                     return true;
                 } else if(this.getTurn().isBreak() && this.getTurn().tpaAnnotation.breakPotted > 0 && this.getTurn().tpaAnnotation.totalPotted === 0 && (this.getTurn().tpaAnnotation.noHit || this.getTurn().tpaAnnotation.pocketed)) {
                     return true;
-                } else if (!this.getTurn().tpaAnnotation.kick && !this.getTurn().tpaAnnotation.safety && !this.getTurn().tpaAnnotation.missErrors) {
+                } else if (!this.getTurn().tpaAnnotation.kick && !this.getTurn().tpaAnnotation.safety && !this.getTurn().tpaAnnotation.missErrors && !(this.getTurn().tpaAnnotation.totalPotted > 0 && this.getTurn().tpaAnnotation.pocketed)) {
                     return false;
                 } else return true;
             }
