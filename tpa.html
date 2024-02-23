@@ -400,7 +400,7 @@
                     return true;
                 } else if(this.getTurn().isBreak() && this.getTurn().tpaAnnotation.breakPotted > 0 && this.getTurn().tpaAnnotation.totalPotted === 0 && (this.getTurn().tpaAnnotation.noHit || this.getTurn().tpaAnnotation.pocketed)) {
                     return true;
-                } else if (!this.getTurn().tpaAnnotation.kick && !this.getTurn().tpaAnnotation.safety && !this.getTurn().tpaAnnotation.missErrors && !(this.getTurn().tpaAnnotation.totalPotted > 0 && this.getTurn().tpaAnnotation.pocketed)) {
+                } else if (!this.getTurn().tpaAnnotation.kick && !this.getTurn().tpaAnnotation.safety && !this.getTurn().tpaAnnotation.missErrors && !this.getTurn().tpaAnnotation.pocketed && !this.getTurn().tpaAnnotation.noHit) {
                     return false;
                 } else return true;
             }
@@ -618,9 +618,8 @@
                         buttonIDs.push('buttonM');
                         buttonIDs.push('buttonK');
                         buttonIDs.push('buttonS');
-                        if (this.tpaAnnotation.totalPotted > 0) {
-                            buttonIDs.push('buttonP');
-                        }
+                        buttonIDs.push('buttonP');
+                        buttonIDs.push('buttonN');
                     } else {
                         buttonIDs.push('buttonN');
                         buttonIDs.push('buttonP');
