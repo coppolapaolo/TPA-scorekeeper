@@ -81,6 +81,17 @@
             border: 2px solid black;
             text-align: center;
         }
+        .btn-secondary {
+            background-color: white !important; 
+            color: black !important; 
+            border-color: black !important; 
+        }
+        
+        .btn-dark {
+            background-color: gray !important; 
+            border-color: lightgray !important;
+            color: black !important;
+        }
     
     </style>
     <meta charset="utf-8">
@@ -146,7 +157,7 @@
                     </div>
                 </div>
             </div>
-            <div id="score" class="col-9 offset-1">(0,0,NaN) <strong>0 - 0</strong> (0,0,NaN)</div>
+            <div id="score" class="col-9 offset-1"><small>(0,0,NaN) <strong>0 - 0</strong> (0,0,NaN)</small></div>
         </div>
         <div id="scoreButtons" class="container mt-2" style="display: block;">
             <div class="row justify-content-center mb-2">
@@ -202,13 +213,13 @@
             </div>
             <div class="row justify-content-center mb-2">
                 <div class="col-2">
-                    <button type="button" id="buttonP" class="btn btn-secondary btn-square">P</button>
+                    <button type="button" id="buttonP" class="btn btn-dark btn-square">P</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" id="buttonG" class="btn btn-secondary btn-square">G</button>
+                    <button type="button" id="buttonG" class="btn btn-success btn-square">G</button>
                 </div>
                 <div class="col-2">
-                    <button type="button" id="buttonN" class="btn btn-secondary btn-square">N</button>
+                    <button type="button" id="buttonN" class="btn btn-dark btn-square">N</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
@@ -234,7 +245,6 @@
     </div>
     <div id="results" class="container justify-content-center mb-5 flex-column" style="display: none;">
     </div>
-
 
     <script>
         function getCookie(cname) {
@@ -449,7 +459,7 @@
                 - breakErrors: if it's a break and ended with noHit or pocketed
                 - missErrors: if it's a miss. It can be 1 or 2
                 - kickErrors: if it's a kick ended with noHit or pocketed
-                - safetyErrors: calculated for the player of the previous turn, if they made a safety and the current player has potted at least one ball. If kick-in, it's not counted
+                - safetyErrors: calculated for the player of the previous turn, if they made a safety and the current player has potted at least one ball or misses an easy shot. If kick-in, it's not counted.
                 - positionError: if it's not a missError of 2, if it's not safeX, hasn't won, and has potted at least one ball (unless it's a safe or a push with totalpotted > 0 but === to breakpotted). Or if pocketed is true or noHit is true, but not kick or break
                 */ 
                 const scorePlayer = this.score[`player${turn.player}`];
@@ -461,7 +471,7 @@
                     scorePlayer.missErrors+=turn.tpaAnnotation.missErrors;
                 }
                 //update breakErrors
-                if (turn.isBreak() && (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed)) {
+                if (turn.isBreak() && turn.tpaAnnotation.pocketed) {
                     scorePlayer.breakErrors++;
                 }
                 //update kickErrors
@@ -472,8 +482,14 @@
                 if (this.currentTurn > 1) {
                     const previousTurn = this.racks[this.currentRack].turns[this.currentTurn-1];
                     // here I assume that only kick-ins are recorded on the first shot
-                    if (previousTurn.tpaAnnotation.safety && turn.tpaAnnotation.totalPotted > 0 && turn.tpaAnnotation.kickSequence.length === 0) {
-                        this.score[`player${previousTurn.player}`].safetyErrors++;
+                    if (previousTurn.tpaAnnotation.safety) {
+                        if (turn.tpaAnnotation.totalPotted > 0) {
+                            if (turn.tpaAnnotation.kickSequence.length === 0) {
+                                this.score[`player${previousTurn.player}`].safetyErrors++;
+                            }
+                        } else if (turn.tpaAnnotation.missErrors === 2) {
+                            this.score[`player${previousTurn.player}`].safetyErrors++;
+                        }
                     }
                 }
                 //update positionError
@@ -481,10 +497,9 @@
                     if (turn.tpaAnnotation.breakPotted != turn.tpaAnnotation.totalPotted) {
                         scorePlayer.positionError++;
                     }
-                } else if (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit) {
-                    if (!turn.tpaAnnotation.kick && !turn.tpaAnnotation.safety && !turn.tpaAnnotation.missErrors) {
+                } 
+                if (turn.tpaAnnotation.pocketed && !turn.tpaAnnotation.kick && !turn.isBreak()) {
                         scorePlayer.positionError++;
-                    }
                 }
                 scorePlayer.ballsPotted += turn.tpaAnnotation.totalPotted;
             }
@@ -897,6 +912,47 @@
                         let scoreRow = document.createElement('tr');
                         scoreRow.innerHTML = `<td colspan="2">${turn.score}</td>`;
                         tbody.appendChild(scoreRow);
+                        if (i === match.racks.length - 2) {//if it's the last rack, add the final score
+                            let finalScoreRow = document.createElement('tr');
+                            finalScoreRow.innerHTML = `
+                                <td>
+                                    <div class="d-flex justify-content-between">
+                                      <div>
+                                        <p class="mb-0 ps-2 text-start">miss errs:</p>
+                                        <p class="mb-0 ps-2 text-start">break errs:</p>
+                                        <p class="mb-0 ps-2 text-start">kick errs:</p>
+                                        <p class="mb-0 ps-2 text-start">safety errs:</p>
+                                        <p class="mb-0 ps-2 text-start">position errs:</p>
+                                      </div>
+                                      <div class="text-right">
+                                        <p class="mb-0 pe-2 text-end">${match.score.player1.missErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player1.breakErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player1.kickErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player1.safetyErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player1.positionError}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div class="d-flex justify-content-between">
+                                      <div>
+                                        <p class="mb-0 ps-2 text-start">miss errs:</p>
+                                        <p class="mb-0 ps-2 text-start">break errs:</p>
+                                        <p class="mb-0 ps-2 text-start">kick errs:</p>
+                                        <p class="mb-0 ps-2 text-start">safety errs:</p>
+                                        <p class="mb-0 ps-2 text-start">position errs:
+                                      </div>
+                                      <div class="text-right">
+                                        <p class="mb-0 pe-2 text-end">${match.score.player2.missErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player2.breakErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player2.kickErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player2.safetyErrors}</p>
+                                        <p class="mb-0 pe-2 text-end">${match.score.player2.positionError}</p>
+                                      </div>
+                                    </div>
+                                  </td>`;
+                            tbody.appendChild(finalScoreRow);                    
+                        }
                     }
                 }
             }
