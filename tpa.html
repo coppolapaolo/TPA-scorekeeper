@@ -788,7 +788,7 @@
         }
 
         function scoreToString(score) {
-            return `(${score.player1.ballsPotted} , ${totalErrors(score.player1)} , ${tpaScore(score.player1)}) <strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong> (${score.player2.ballsPotted} , ${totalErrors(score.player2)} , ${tpaScore(score.player2)})`;
+            return `<small>(${score.player1.ballsPotted},${totalErrors(score.player1)},${tpaScore(score.player1)}) <strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong> (${score.player2.ballsPotted},${totalErrors(score.player2)},${tpaScore(score.player2)})</small>`;
         }
 
         function togglePlayer(event) {
