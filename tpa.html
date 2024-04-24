@@ -323,6 +323,10 @@
                         positionError: 0
                     }
                 };
+                this.consecutiveErrors = {
+                    player1: 0,
+                    player2: 0
+                };
                 // add a dummy element to the racks to have the first rack with index 1 instead of 0
                 this.racks = [null];
                 this.currentRack = 1;
@@ -426,11 +430,13 @@
 
             Also updates the score based on the annotations and the potential winning of the turn.
             */
+                const previousPlayer = this.currentPlayer;
                 this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
                 if (!this.racks[this.currentRack].turns[this.currentTurn].hasBeenPlayed() && this.getTurn().isBreak()) {
                     this.racks[this.currentRack].turns[this.currentTurn].player = this.currentPlayer;
                 } else {
                     this.updateScore(this.racks[this.currentRack].turns[this.currentTurn]);
+                    const tripleFoul = this.consecutiveErrors[`player${previousPlayer}`] >= 3;
                     this.getTurn().score = scoreToString(this.score);
                     if (this.racks[this.currentRack].turns[this.currentTurn].isWinning()) {
                         this.racks.push({ turns: [null] });
@@ -450,7 +456,13 @@
                         if (pushed) {
                             this.getTurn().push();
                         }
-                    }
+                        if (tripleFoul) {// if triple foul then simulates the pressure of button 0 followed by butotn G
+                            this.getTurn().tpaAnnotation.totalPotted = 0;
+                            this.getTurn().setWinningTurn();
+                            updateLabels(this.getTurn());
+                            updateButtons(this.getTurn());
+                        }
+                    } 
                 }
             }
 
@@ -470,9 +482,17 @@
                 if (turn.tpaAnnotation.missErrors) {
                     scorePlayer.missErrors+=turn.tpaAnnotation.missErrors;
                 }
-                //update breakErrors
-                if (turn.isBreak() && turn.tpaAnnotation.pocketed) {
-                    scorePlayer.breakErrors++;
+                //update breakErrors. If it's a break shot (turn is break and totalPotted is zero or totalPotted is equal to breakPotted) and ended with noHit or pocketed
+                if (turn.isBreakShot() && (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit)) {
+                    if (turn.tpaAnnotation.pocketed) {
+                        if (!turn.tpaAnnotation.kick && !turn.tpaAnnotation.safety && !turn.tpaAnnotation.missErrors) {
+                            scorePlayer.breakErrors++;
+                        } else if (turn.tpaAnnotation.missErrors){
+                            scorePlayer.positionError++;
+                        }
+                    } else {
+                        scorePlayer.breakErrors++;
+                    }   
                 }
                 //update kickErrors
                 if (turn.tpaAnnotation.kick && (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed)) {
@@ -502,6 +522,16 @@
                         scorePlayer.positionError++;
                 }
                 scorePlayer.ballsPotted += turn.tpaAnnotation.totalPotted;
+                //update consecutive errors
+                if (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed) {
+                    if (turn.tpaAnnotation.totalPotted === 0) {
+                        this.consecutiveErrors[`player${turn.player}`]++;
+                    } else {
+                        this.consecutiveErrors[`player${turn.player}`] = 1;
+                    }
+                } else {
+                    this.consecutiveErrors[`player${turn.player}`] = 0;
+                }
             }
         }
 
@@ -579,10 +609,10 @@
         }
         
         class Turn {
-            constructor(player, breakShot, ballsRemaining) {
-                /* breakShot is a boolean, ballsRemaining is an integer, tpaAnnotation is a TPAAnnotation object */
+            constructor(player, breakTurn, ballsRemaining) {
+                /* breakTurn is a boolean, ballsRemaining is an integer, tpaAnnotation is a TPAAnnotation object */
                 this.player = player;
-                this.breakShot = breakShot;
+                this.breakTurn = breakTurn;
                 this.ballsRemaining = ballsRemaining;
                 this.tpaAnnotation = new TPAAnnotation();
                 this.pushed = false;
@@ -609,7 +639,7 @@
                     return buttonIDs;
                 }
                 if (!this.tpaAnnotation.ballsAnnotated()) {
-                    if (!this.breakShot || this.tpaAnnotation.breakPotted === null) {
+                    if (!this.breakTurn || this.tpaAnnotation.breakPotted === null) {
                         for (let i = 0; i <= this.ballsRemaining; i++) {
                             buttonIDs.push(`button${i}`);
                         }
@@ -620,7 +650,7 @@
                         }
                     } 
                 } else if (!this.tpaAnnotation.noHit && !this.tpaAnnotation.pocketed) {
-                    if (this.breakShot && this.tpaAnnotation.totalPotted === 0) {//special case where the break shot didn't pocket anything
+                    if (this.breakTurn && this.tpaAnnotation.totalPotted === 0) {//special case where the break shot didn't pocket anything
                         buttonIDs.push('buttonN');
                         buttonIDs.push('buttonP');
                     } else if (!this.tpaAnnotation.safety && !this.tpaAnnotation.missErrors && !this.tpaAnnotation.kick) {
@@ -640,7 +670,7 @@
                         buttonIDs.push('buttonP');
                         if (this.tpaAnnotation.safety){
                             console.log("safety");
-                            if ((this.breakShot && this.tpaAnnotation.breakPotted === this.tpaAnnotation.totalPotted) || (this.isPushed() && this.tpaAnnotation.totalPotted === 0) || (this.previousTurn != null && this.previousTurn.isBreak() && this.previousTurn.tpaAnnotation.totalPotted === 0 && this.tpaAnnotation.totalPotted === 0)) {//the push is legal on the first shot, so in three cases: 1) break with breakPotted === totalPotted, 2) push turn before pocketing any balls (totalPotted === 0), 3) previous turn was a break with totalPotted === 0 
+                            if (this.isBreakShot() || (this.isPushed() && this.tpaAnnotation.totalPotted === 0) || (this.previousTurn != null && this.previousTurn.isBreak() && this.previousTurn.tpaAnnotation.totalPotted === 0 && this.tpaAnnotation.totalPotted === 0)) {//the push is legal on the first shot, so in three cases: 1) break with breakPotted === totalPotted, 2) push turn before pocketing any balls (totalPotted === 0), 3) previous turn was a break with totalPotted === 0 
                                 buttonIDs.push('buttonp');
                             }
                             if (this.tpaAnnotation.totalPotted > 0) {
@@ -657,7 +687,11 @@
             }
 
             isBreak() {
-                return this.breakShot;
+                return this.breakTurn;
+            }
+
+            isBreakShot() {
+                return this.isBreak() && this.tpaAnnotation.totalPotted === this.tpaAnnotation.breakPotted;
             }
 
             push() {
