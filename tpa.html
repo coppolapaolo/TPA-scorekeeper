@@ -92,6 +92,13 @@
             border-color: lightgray !important;
             color: black !important;
         }
+
+        .btn-match-type {
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     
     </style>
     <meta charset="utf-8">
@@ -108,6 +115,14 @@
             <label for="player2">Player 2</label>
             <input type="text" class="form-control" id="player2" placeholder="Inserisci il nome del giocatore 2"
                 onchange="saveNames()">
+        </div>
+        <div class="d-flex justify-content-center mt-3 me-2">
+            <input type="radio" class="btn-check" name="gameType" id="gameType1" value="8" autocomplete="off" disabled>
+            <label class="btn btn-outline-primary me-2 btn-match-type" for="gameType1">8 ball</label>
+            <input type="radio" class="btn-check" name="gameType" id="gameType2" value="9" autocomplete="off" checked>
+            <label class="btn btn-outline-primary me-2 btn-match-type" for="gameType2">9 ball</label>
+            <input type="radio" class="btn-check" name="gameType" id="gameType3"  value="10" autocomplete="off">
+            <label class="btn btn-outline-primary btn-match-type" for="gameType3">10 ball</label>
         </div>
         <button type="button" class="btn btn-primary col-5" style="margin: .5em;" onclick="startMatch()">Start</button>
     </form>
@@ -191,6 +206,11 @@
                 </div>
                 <div class="col-2">
                     <button type="button" id="button9" class="btn btn-secondary btn-square">9</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-2">
+                <div class="col-2">
+                    <button type="button" id="button10" class="btn btn-secondary btn-square">10</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
@@ -297,7 +317,8 @@
         }
 
         class Match {
-            constructor(player1name, player2name) {
+            constructor(player1name, player2name, gameType) {
+                // gameType is an integer: 8, 9, 10
                 this.startDate = formatDateTime(new Date()); // Current date and time
                 this.players = [
                     { name: player1name },
@@ -332,7 +353,8 @@
                 this.currentRack = 1;
                 this.currentTurn = 1;
                 this.currentPlayer = 1;
-                this.racks.push({turns:[null, new Turn(this.currentPlayer,true,9)]});
+                this.gameType = gameType;
+                this.racks.push({turns:[null, new Turn(this.currentPlayer,true,this.gameType)]});
             }
 
             annotate(event) {// button listener
@@ -442,11 +464,11 @@
                         this.racks.push({ turns: [null] });
                         this.currentRack++;
                         this.currentTurn = 1;
-                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,9));
+                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,this.gameType));
                     } else {
                         let ballsRemaining = this.getTurn().ballsRemaining - Math.max(this.getTurn().tpaAnnotation.totalPotted,this.getTurn().tpaAnnotation.breakPotted);
-                        // Almost impossible case of 9 balls potted on the break and cue ball in pocket or foul
-                        if (this.getTurn().tpaAnnotation.breakPotted === 9 && this.getTurn().tpaAnnotation.totalPotted === 0) {
+                        // Almost impossible case of all balls potted on the break and cue ball in pocket or foul
+                        if (this.getTurn().tpaAnnotation.breakPotted === this.gameType && this.getTurn().tpaAnnotation.totalPotted === 0) {
                             ballsRemaining = 1;
                         }
                         let pushed = this.getTurn().isPushed() && (this.getTurn().isBreak() || (this.getTurn().isPushed() && this.getTurn().previousTurn.isBreak() && this.getTurn().previousTurn.tpaAnnotation.totalPotted === 0 && this.getTurn().tpaAnnotation.totalPotted === 0));
@@ -776,7 +798,7 @@
         let match = null;
 
         function startMatch() {
-            match = new Match(getCookie('player1'),getCookie('player2'));
+            match = new Match(getCookie('player1'),getCookie('player2'),document.querySelector('input[name="gameType"]:checked').value);
 
             document.getElementById('dateTitle').style.display = 'block';
             document.getElementById('main').style.display = 'block';
