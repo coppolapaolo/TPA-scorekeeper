@@ -888,9 +888,11 @@
         }
 
         document.getElementById('playersGroup').addEventListener('click', togglePlayer);
+
         // Add a click listener to divPlayers that resets the current turn
         document.getElementById('divPlayers').addEventListener('click', function() {
-            match.racks[match.currentRack].turns[match.currentTurn].tpaAnnotation.reset();
+            match.getTurn().tpaAnnotation.reset();
+            match.getTurn().winningTurn = false;
             updateLabels(match.getTurn());
             updateButtons(match.getTurn());
         });
