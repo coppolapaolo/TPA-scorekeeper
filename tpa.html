@@ -344,10 +344,6 @@
                         positionError: 0
                     }
                 };
-                this.consecutiveErrors = {
-                    player1: 0,
-                    player2: 0
-                };
                 // add a dummy element to the racks to have the first rack with index 1 instead of 0
                 this.racks = [null];
                 this.currentRack = 1;
@@ -458,7 +454,7 @@
                     this.racks[this.currentRack].turns[this.currentTurn].player = this.currentPlayer;
                 } else {
                     this.updateScore(this.racks[this.currentRack].turns[this.currentTurn]);
-                    const tripleFoul = this.consecutiveErrors[`player${previousPlayer}`] >= 3;
+                    const tripleFoul = this.getTurn().consecutiveErrors >= 3;
                     this.getTurn().score = scoreToString(this.score);
                     if (this.racks[this.currentRack].turns[this.currentTurn].isWinning()) {
                         this.racks.push({ turns: [null] });
@@ -546,13 +542,14 @@
                 scorePlayer.ballsPotted += turn.tpaAnnotation.totalPotted;
                 //update consecutive errors
                 if (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed) {
+                    const previousErrors = turn.previousTurn === null ? 0 : turn.previousTurn.previousTurn === null ? 0 : turn.previousTurn.previousTurn.consecutiveErrors;
                     if (turn.tpaAnnotation.totalPotted === 0) {
-                        this.consecutiveErrors[`player${turn.player}`]++;
+                        turn.consecutiveErrors = previousErrors + 1;
                     } else {
-                        this.consecutiveErrors[`player${turn.player}`] = 1;
+                        turn.consecutiveErrors = 1;
                     }
                 } else {
-                    this.consecutiveErrors[`player${turn.player}`] = 0;
+                    turn.consecutiveErrors = 0;
                 }
             }
         }
@@ -641,6 +638,7 @@
                 this.winningTurn = false;
                 this.previousTurn = null;
                 this.score = null;
+                this.consecutiveErrors = 0;
             } 
 
             showButtons() {
