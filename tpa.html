@@ -117,7 +117,7 @@
                 onchange="saveNames()">
         </div>
         <div class="d-flex justify-content-center mt-3 me-2">
-            <input type="radio" class="btn-check" name="gameType" id="gameType1" value="8" autocomplete="off" disabled>
+            <input type="radio" class="btn-check" name="gameType" id="gameType1" value="8" autocomplete="off">
             <label class="btn btn-outline-primary me-2 btn-match-type" for="gameType1">8 ball</label>
             <input type="radio" class="btn-check" name="gameType" id="gameType2" value="9" autocomplete="off" checked>
             <label class="btn btn-outline-primary me-2 btn-match-type" for="gameType2">9 ball</label>
@@ -424,6 +424,9 @@
             }
 
             getTurn() {
+                if (arguments.length === 1 && arguments[0] < 0) {//previous turn
+                    return this.currentTurn+arguments[0] >= 0 ? this.racks[this.currentRack].turns[this.currentTurn + arguments[0]] : null;
+                }
                 return this.racks[this.currentRack].turns[this.currentTurn];
             }
 
@@ -466,14 +469,15 @@
                         this.currentTurn = 1;
                         this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,this.gameType));
                     } else {
-                        let ballsRemaining = this.getTurn().ballsRemaining - Math.max(this.getTurn().tpaAnnotation.totalPotted,this.getTurn().tpaAnnotation.breakPotted);
+                        let ballsRemaining = this.getTurn().ballsRemaining - Math.max(this.getTurn().tpaAnnotation.totalPotted, this.getTurn().tpaAnnotation.breakPotted);
                         // Almost impossible case of all balls potted on the break and cue ball in pocket or foul
                         if (this.getTurn().tpaAnnotation.breakPotted === this.gameType && this.getTurn().tpaAnnotation.totalPotted === 0) {
                             ballsRemaining = 1;
                         }
                         let pushed = this.getTurn().isPushed() && (this.getTurn().isBreak() || (this.getTurn().isPushed() && this.getTurn().previousTurn.isBreak() && this.getTurn().previousTurn.tpaAnnotation.totalPotted === 0 && this.getTurn().tpaAnnotation.totalPotted === 0));
                         this.currentTurn++;
-                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,false,ballsRemaining));
+                        // if the game is 8 ball, the remaining balls depend on two previous turns
+                        this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,false,this.gameType == 8 ? (this.currentTurn < 3 ? 8 : this.getTurn(-2).ballsRemaining - this.getTurn(-2).tpaAnnotation.totalPotted) : ballsRemaining));
                         this.getTurn().previousTurn = this.racks[this.currentRack].turns[this.currentTurn-1];
                         if (pushed) {
                             this.getTurn().push();
@@ -667,7 +671,7 @@
                         }
                     } else {
                         buttonIDs.push('button0');
-                        for (let i = this.tpaAnnotation.breakPotted; i <= this.ballsRemaining; i++) {
+                        for (let i = match.gameType == 8 ? 0 : this.tpaAnnotation.breakPotted; i <= this.ballsRemaining; i++) {
                             buttonIDs.push(`button${i}`);
                         }
                     } 
