@@ -108,12 +108,12 @@
     <form id="playerForm" class="mb-5 d-flex row justify-content-center">
         <div class="form-group">
             <label for="player1">Player 1</label>
-            <input type="text" class="form-control" id="player1" placeholder="Inserisci il nome del giocatore 1"
+            <input type="text" class="form-control" id="player1" placeholder="Enter player name 1"
                 onchange="saveNames()">
         </div>
         <div class="form-group">
             <label for="player2">Player 2</label>
-            <input type="text" class="form-control" id="player2" placeholder="Inserisci il nome del giocatore 2"
+            <input type="text" class="form-control" id="player2" placeholder="Enter player name 2"
                 onchange="saveNames()">
         </div>
         <div class="d-flex justify-content-center mt-3 me-2">
@@ -293,20 +293,20 @@
             if (player2 != "") {
                 document.getElementById('player2').value = player2;
             }
+
         };
 
         function saveNames() {
             var player1 = document.getElementById('player1').value;
             var player2 = document.getElementById('player2').value;
-
             var d = new Date();
             d.setTime(d.getTime() + (60 * 60 * 24 * 60 * 1000)); // Two months
             var expires = "expires=" + d.toUTCString();
-
+        
             document.cookie = "player1=" + player1 + ";" + expires + ";path=/";
             document.cookie = "player2=" + player2 + ";" + expires + ";path=/";
         }
-
+        
         function formatDateTime(date) {
             const yyyy = date.getFullYear();
             const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months start from 0
@@ -356,7 +356,7 @@
             annotate(event) {// button listener
                 // buttons have ids buttonX where X is a number or a letter
                 const buttonID = event.target.id;
-                const buttonValue = parseInt(buttonID[6]);
+                const buttonValue = parseInt(buttonID.slice(6));
                 if (buttonValue === 0) {
                     this.getTurn().tpaAnnotation.totalPotted = 0;
                     if (this.getTurn().isBreak()) {
@@ -693,7 +693,6 @@
                         buttonIDs.push('buttonN');
                         buttonIDs.push('buttonP');
                         if (this.tpaAnnotation.safety){
-                            console.log("safety");
                             if (this.isBreakShot() || (this.isPushed() && this.tpaAnnotation.totalPotted === 0) || (this.previousTurn != null && this.previousTurn.isBreak() && this.previousTurn.tpaAnnotation.totalPotted === 0 && this.tpaAnnotation.totalPotted === 0)) {//the push is legal on the first shot, so in three cases: 1) break with breakPotted === totalPotted, 2) push turn before pocketing any balls (totalPotted === 0), 3) previous turn was a break with totalPotted === 0 
                                 buttonIDs.push('buttonp');
                             }
@@ -731,7 +730,7 @@
             }
 
             isWinning() {
-                return this.winningTurn = this.winningTurn || this.ballsRemaining === 0 || this.ballsRemaining === this.tpaAnnotation.totalPotted;
+                return this.winningTurn = this.winningTurn || this.ballsRemaining === 0 || this.ballsRemaining == this.tpaAnnotation.totalPotted;
             }
 
             hasBeenPlayed() {
@@ -758,7 +757,7 @@
             });
             
             updateSwitchPlayerStatus();
-            document.getElementById('endMatch').classList.remove('d-flex');//controllare??
+            document.getElementById('endMatch').classList.remove('d-flex');
         }
 
         function updateLabels(turn) {
@@ -928,7 +927,7 @@
         }
 
         function endMatch() {
-            var confirmation = window.confirm("This will end the match. Are you sure?");
+            var confirmation = window.confirm("This will end the match.\nAre you sure?");
           
             if (!confirmation) return;
             // Builds an HTML table with all the turns and annotations
@@ -1020,6 +1019,46 @@
             document.getElementById('main').style.display = 'none';
             document.getElementById('endMatch').classList.remove('d-flex');
             document.getElementById('results').style.display = 'block';
+
+            // save the match in the google sheet
+            // saves date, player1, player2, tpaScore, racksWon, ballsPotted, missErrors, breakErrors, kickErrors, safetyErrors, positionError (for both players), gameType, html table with the annotations
+
+            //scritp url is hard-coded... :( (for now)
+            const googleSheetURL = 'https://script.google.com/macros/s/AKfycbzn6HJDjup8zqvASM4-cB9zmPcPMi8h-u-iXAXaPDenkr_G9Q2Ap05mrisaWL_Fe8FK4w/exec';
+            const matchData = {
+                date: match.startDate,
+                player1: match.players[0].name,
+                player2: match.players[1].name,
+                player1Score: tpaScore(match.score.player1),
+                player2Score: tpaScore(match.score.player2),
+                player1RacksWon: match.score.player1.racksWon,
+                player2RacksWon: match.score.player2.racksWon,
+                player1BallsPotted: match.score.player1.ballsPotted,
+                player2BallsPotted: match.score.player2.ballsPotted,
+                player1MissErrors: match.score.player1.missErrors,
+                player2MissErrors: match.score.player2.missErrors,
+                player1BreakErrors: match.score.player1.breakErrors,
+                player2BreakErrors: match.score.player2.breakErrors,
+                player1KickErrors: match.score.player1.kickErrors,
+                player2KickErrors: match.score.player2.kickErrors,
+                player1SafetyErrors: match.score.player1.safetyErrors,
+                player2SafetyErrors: match.score.player2.safetyErrors,
+                player1PositionError: match.score.player1.positionError,
+                player2PositionError: match.score.player2.positionError,
+                gameType: match.gameType,
+                htmlTable: results.outerHTML
+            };
+            fetch(googleSheetURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(matchData)
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
 
     </script>
