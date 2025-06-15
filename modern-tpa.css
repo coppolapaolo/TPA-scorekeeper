@@ -1,0 +1,200 @@
+/* TPA Scorekeeper - Professional Scoresheet Styling */
+.tpa-app {
+  --primary-green: #2d5a27;      /* Deep billiards green */
+  --secondary-green: #4a7c59;    /* Lighter green for accents */
+  --accent-gold: #d4af37;        /* Classic gold for highlights */
+  --light-green: #e8f5e8;       /* Subtle background green */
+  --dark-text: #2c3e50;         /* Professional dark text */
+  --border-black: #000000;      /* Pure black for scoresheet borders */
+}
+
+/* ===== PRESERVE EXISTING DIMENSIONS ===== */
+
+/* White labels - 70x70px square boxes */
+.tpa-app .white-label {
+  width: 70px !important; 
+  height: 70px !important;
+  border: 2px solid var(--border-black) !important;
+  background: white !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  font-size: 1.5em !important;
+  font-weight: bold !important;
+  color: var(--dark-text) !important;
+}
+
+/* Gray labels - 35x70px rectangle boxes */
+.tpa-app .gray-label {
+  width: 35px !important;
+  height: 70px !important; 
+  border: 2px solid var(--border-black) !important;
+  background-color: #d3d3d3 !important;  /* Consistent light gray */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  font-size: 1.5em !important;
+  font-weight: bold !important;
+  color: var(--dark-text) !important;
+}
+
+/* ===== GAME WON CIRCLES ===== */
+
+/* Base circle styling - maintain existing dimensions */
+.tpa-app .circle {
+  width: 68px !important;
+  height: 68px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Game won styling - triggered by JavaScript border style */
+.tpa-app .circle[style*="border: 2px solid black"] {
+  background: var(--accent-gold) !important;
+  border: 4px solid var(--primary-green) !important;
+  animation: winPulse 0.6s ease-in-out !important;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4) !important;
+}
+
+/* White label inside won game circle */
+.tpa-app .circle[style*="border: 2px solid black"] .white-label {
+  background: transparent !important;
+  border: none !important;
+  color: white !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+}
+
+/* ===== WIN ANIMATION ===== */
+@keyframes winPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* ===== PLAYER BUTTONS ALIGNMENT ===== */
+
+/* Player name buttons - same height as annotation boxes */
+.tpa-app #player1Label, 
+.tpa-app #player2Label {
+  height: 70px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  font-size: 1.2rem !important;
+  font-weight: bold !important;
+}
+
+/* ===== BILLIARDS THEME COLORS ===== */
+
+/* Headers and titles */
+.tpa-app h1, 
+.tpa-app h3,
+.tpa-app h4,
+.tpa-app h5 {
+  color: var(--primary-green) !important;
+  font-weight: bold !important;
+}
+
+/* Primary buttons */
+.tpa-app .btn-primary {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%) !important;
+  border-color: var(--primary-green) !important;
+  color: white !important;
+}
+
+.tpa-app .btn-primary:hover,
+.tpa-app .btn-primary:focus {
+  background: linear-gradient(135deg, var(--secondary-green) 0%, var(--primary-green) 100%) !important;
+  border-color: var(--secondary-green) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(45, 90, 39, 0.3) !important;
+}
+
+/* Outline buttons */
+.tpa-app .btn-outline-primary {
+  color: var(--primary-green) !important;
+  border-color: var(--primary-green) !important;
+  font-weight: 600 !important;
+}
+
+.tpa-app .btn-outline-primary:hover,
+.tpa-app .btn-outline-primary:focus,
+.tpa-app .btn-outline-primary.active,
+.tpa-app .btn-check:checked + .btn-outline-primary {
+  background-color: var(--primary-green) !important;
+  border-color: var(--primary-green) !important;
+  color: white !important;
+  box-shadow: 0 2px 4px rgba(45, 90, 39, 0.2) !important;
+}
+
+/* Success button (G button) */
+.tpa-app .btn-success {
+  background: linear-gradient(135deg, var(--accent-gold) 0%, #b8860b 100%) !important;
+  border-color: var(--accent-gold) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.tpa-app .btn-success:hover,
+.tpa-app .btn-success:focus {
+  background: linear-gradient(135deg, #b8860b 0%, var(--accent-gold) 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3) !important;
+}
+
+/* ===== SCORESHEET TABLES ===== */
+
+/* Table borders - clean scoresheet appearance */
+.tpa-app table, 
+.tpa-app td, 
+.tpa-app th, 
+.tpa-app tr {
+  border: 2px solid var(--border-black) !important;
+  text-align: center !important;
+}
+
+/* Table headers */
+.tpa-app th {
+  background: var(--light-green) !important;
+  color: var(--primary-green) !important;
+  font-weight: bold !important;
+  padding: 0.75rem !important;
+}
+
+/* Table cells */
+.tpa-app td {
+  padding: 0.5rem !important;
+  background: white !important;
+  vertical-align: middle !important;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .tpa-app .white-label,
+  .tpa-app .gray-label {
+    font-size: 1.2em !important;
+  }
+  
+  .tpa-app #player1Label, 
+  .tpa-app #player2Label {
+    font-size: 1rem !important;
+  }
+  
+  .tpa-app h1, .tpa-app h3 {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .tpa-app .white-label,
+  .tpa-app .gray-label {
+    font-size: 1em !important;
+  }
+  
+  .tpa-app #player1Label, 
+  .tpa-app #player2Label {
+    font-size: 0.9rem !important;
+  }
+}

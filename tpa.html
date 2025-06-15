@@ -11,100 +11,11 @@
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
-    <style>
-        .container {
-            max-width: 960px;
-        }
-
-        .btn {
-            height: 70px;
-            vertical-align: middle;
-        }
-        .circle {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            border: 2px solid black;
-            pointer-events: none;
-        }
-            .circle-kick {
-            position: relative;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            border: 2px solid black;
-            padding: 1px;
-        }
-
-        .circle-kick .fs-6 {
-            margin: 0;
-        }
-
-        .circle label, .circle-kick label {
-            margin: 0;
-        }
-
-        .white-label, .gray-label {
-            /* diplay: flex; */
-            justify-content: center;
-            align-items: center;
-            vertical-align: middle;
-            height: 70px;
-            font-size: 1.5em;
-        }
-        .white-label {
-            width: 70px; 
-            border: 1px solid black;
-        }
-        .gray-label {
-            width: 35px; /* half of whiteLabel */
-            background-color: lightgray;
-        }
-        #player1Label, #player2Label, #whiteLabel1, #whiteLabel2, #grayLabel1, #grayLabel2 {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 70px; /* Fixed height to ensure enough space for center alignment */
-        }
-        #circle1, #circle2 {
-            position: relative;
-            width: 68px;
-            height: 68px;
-        }
-        .btn-square {
-            width: 50px;
-            height: 50px;
-            margin: 0.3em;
-        }
-        table, td, th, tr {
-            border: 2px solid black;
-            text-align: center;
-        }
-        .btn-secondary {
-            background-color: white !important; 
-            color: black !important; 
-            border-color: black !important; 
-        }
-        
-        .btn-dark {
-            background-color: gray !important; 
-            border-color: lightgray !important;
-            color: black !important;
-        }
-
-        .btn-match-type {
-            height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    
-    </style>
+    <link rel="stylesheet" href="modern-tpa.css">
     <meta charset="utf-8">
 </head>
 
-<body class="p-3 m-0">
+<body class="p-3 m-0 tpa-app">
     <form id="playerForm" class="mb-5 d-flex row justify-content-center">
         <div class="form-group">
             <label for="player1">Player 1</label>
