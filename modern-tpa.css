@@ -73,17 +73,92 @@
   100% { transform: scale(1); }
 }
 
-/* ===== PLAYER BUTTONS ALIGNMENT ===== */
+/* ===== CONSECUTIVE ERRORS WARNING BADGES ===== */
 
-/* Player name buttons - same height as annotation boxes */
+/* Container for player name and warning badges */
 .tpa-app #player1Label, 
 .tpa-app #player2Label {
   height: 70px !important;
   display: flex !important;
-  justify-content: center !important;
+  justify-content: space-between !important;  /* Space between name and badges */
   align-items: center !important;
   font-size: 1.2rem !important;
   font-weight: bold !important;
+  padding: 0 1rem !important;  /* Add horizontal padding for badges */
+}
+
+/* Player name span */
+.tpa-app .player-name {
+  flex-grow: 1 !important;
+  text-align: center !important;
+}
+
+/* Warning badges container */
+.tpa-app .warning-badges {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;  /* Small gap between multiple badges */
+  min-width: 30px !important;  /* Reserve space for badges */
+  justify-content: flex-end !important;
+}
+
+/* Individual warning badge */
+.tpa-app .warning-badge {
+  font-size: 0.8rem !important;  /* Slightly smaller than standard */
+  line-height: 1 !important;
+  opacity: 0.9 !important;
+}
+
+/* 1 consecutive error - yellow warning */
+.tpa-app .warning-badge.error-1 {
+  color: #ffc107 !important;  /* Bootstrap warning yellow */
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3)) !important;
+}
+
+/* 2 consecutive errors - orange warning */
+.tpa-app .warning-badge.error-2 {
+  color: #fd7e14 !important;  /* Bootstrap warning orange */
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3)) !important;
+  animation: subtle-pulse 2s ease-in-out infinite !important;
+}
+
+/* Subtle animation for 2 errors */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .tpa-app #player1Label, 
+  .tpa-app #player2Label {
+    padding: 0 0.75rem !important;
+    font-size: 1rem !important;
+  }
+  
+  .tpa-app .warning-badge {
+    font-size: 0.7rem !important;
+  }
+  
+  .tpa-app .warning-badges {
+    min-width: 25px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .tpa-app #player1Label, 
+  .tpa-app #player2Label {
+    padding: 0 0.5rem !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .tpa-app .warning-badge {
+    font-size: 0.6rem !important;
+  }
+  
+  .tpa-app .warning-badges {
+    min-width: 20px !important;
+  }
 }
 
 /* ===== BILLIARDS THEME COLORS ===== */
