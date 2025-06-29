@@ -1,164 +1,200 @@
-# 🧪 TPA Scorekeeper - Testing Suite
+# 🧪 TPA Scorekeeper - Test Suite
 
-Comprehensive unit testing system for the TPA Scorekeeper application.
-
-## 📁 Test Structure
+## 📁 Struttura Test Directory
 
 ```
 test/
-├── test-runner.html         ← Browser-based test runner
-├── test-framework.js        ← Simple testing framework
-├── test-utils.js           ← Tests for utility functions
-├── test-models.js          ← Tests for data models
-├── test-warning-badges.js  ← Tests for warning badges system
-└── README.md               ← This file
+├── test-runner.html          ← Test runner page (UI)
+├── test-framework.js         ← Simple test framework
+├── test-number-click.js      ← Specific test for number click logic
+└── README.md                 ← This file
 ```
 
-## 🚀 Running Tests
+## 🚀 Come Eseguire i Test
 
-### Method 1: Browser Test Runner (Recommended)
-1. Open `test/test-runner.html` in your browser
-2. Click "🚀 Run All Tests" button
-3. View results in the console output
+### **Metodo 1: Test Runner (Raccomandato)**
+1. Apri `test/test-runner.html` nel browser
+2. Clicca "🔢 Run Number Click Test" 
+3. Osserva i risultati nella console di output
 
-### Method 2: Direct Console Access
-1. Open browser developer tools (F12)
-2. Navigate to the test runner page
-3. Use `runTests()` function in console
+### **Metodo 2: Console Browser (Debug)**
+1. Apri `test/test-runner.html`
+2. Apri Developer Tools (F12) → Console
+3. Osserva anche il log dettagliato nella console browser
 
-### Method 3: Auto-run on Load
-1. Open: `test/test-runner.html?autorun=true`
-2. Tests will run automatically after page load
+## 📋 Test Disponibili
 
-## 📋 Test Coverage
+### **✅ Number Click Logic Test**
+**File:** `test-number-click.js`
 
-### ✅ Utility Functions (`test-utils.js`)
-- **Date formatting**: `formatDateTime()` accuracy
-- **TPA calculation**: Score computation logic
-- **Error counting**: `totalErrors()` summation
-- **Score display**: String generation for UI
-- **Kick sequences**: HTML generation for kicks
+**Cosa testa:**
+- ✅ Primo click: mostra solo `³` (non `²2`)
+- ✅ Secondo click: mostra `³5`
+- ✅ Terzo click: nessun effetto (box pieno)
+- ✅ Edge cases: numeri 0 e 10
+- ✅ Player 2: isolamento tra giocatori
 
-### ✅ Data Models (`test-models.js`)
-- **TPAAnnotation**: Initialization, reset, note generation
-- **Turn**: Break detection, winning logic, played status
-- **Match**: Player management, score tracking, turn flow
-- **Player Toggle**: Bug fix verification for player switching
+**Test Cases:**
+1. `should show only superscript on first click`
+2. `should show superscript + normal number on second click`
+3. `should do nothing on third click (box full)`
+4. `should handle edge cases (0 and 10)`
+5. `should work correctly for player 2`
 
-### ✅ Warning Badges (`test-warning-badges.js`)
-- **Badge Display**: 1 error (⚠️), 2 errors (⚠️⚠️)
-- **Badge Clearing**: Reset on 0 errors
-- **DOM Safety**: Graceful handling of missing elements
-- **Multi-player**: Separate badge management per player
+## 🎯 Esempio Output Atteso
 
-## 🔍 Test Framework Features
+```
+🧪 Running Number Click Test...
 
-### Simple Assertions
-```javascript
-assert.equal(actual, expected);
-assert.ok(value);
-assert.deepEqual(obj1, obj2);
-assert.throws(function);
+📁 Test Suite: Number Click Logic (REAL CODE)
+============================================
+
+🧪 should show only superscript on first click
+✅ topNumber should be 2
+✅ bottomNumber should be null
+✅ Display should be exactly "<sup>2</sup>"
+✅ Display should NOT contain "2</sup>2"
+✅ Display should NOT contain normal "2" after superscript
+
+🧪 should show superscript + normal number on second click
+✅ topNumber should still be 3
+✅ bottomNumber should be 5
+✅ Display should be exactly "<sup>3</sup>5"
+
+🧪 should do nothing on third click (box full)
+✅ topNumber should not change
+✅ bottomNumber should not change
+✅ Display should not change
+✅ Display should remain "<sup>1</sup>7"
+
+🧪 should handle edge cases (0 and 10)
+✅ Should handle 0 correctly
+✅ Display should show "<sup>0</sup>"
+✅ Should handle 10 correctly
+✅ Display should show "<sup>0</sup>10"
+
+🧪 should work correctly for player 2
+✅ Player 1 box should remain empty
+✅ Player 2 topNumber should be 4
+✅ Player 2 display should show "<sup>4</sup>"
+
+🧪 should verify function availability
+✅ handleNumberClick should be loaded from match.js
+✅ MatchState should be available (mocked)
+✅ updatePlayerDisplay should be available (mocked)
+
+📊 Test Results:
+✅ Passed: 18
+❌ Failed: 0
+📝 Total: 18
+📈 Success Rate: 100.0%
+
+🎉 All tests passed!
 ```
 
-### Test Structure
+## 🔧 Architettura Test
+
+### **Test Framework (`test-framework.js`)**
+- ✅ Assertion functions: `assert.ok()`, `assert.equal()`, `assert.contains()`
+- ✅ Test organization: `describe()`, `it()`
+- ✅ Result tracking: `TestResults.summary()`
+- ✅ Utilities: `TestUtils.mock()`, `TestUtils.spy()`
+
+### **Real Code Testing**
+- ✅ **Imports real functions**: Carica `../js/match.js` e testa `handleNumberClick()` originale
+- ✅ **No code duplication**: Nessuna copia di codice, solo test delle funzioni vere
+- ✅ **Mock dependencies only**: Mock solo DOM e localStorage, non la logica
+- ✅ **Setup/Teardown**: Sostituisce temporaneamente dipendenze, poi ripristina
+
+### **Mock System (Dependencies Only)**
+- ✅ **Mock MatchState**: Sostituisce oggetto globale durante test
+- ✅ **Mock DOM functions**: Sostituisce `updatePlayerDisplay()` per testing isolato
+- ✅ **Mock localStorage**: Sostituisce `saveMatchState()` per evitare side effects
+- ❌ **No logic mocking**: La logica `handleNumberClick()` è quella vera da `match.js`
+
+### **Isolated Testing Approach**
 ```javascript
-describe('Test Suite Name', () => {
-    it('should do something specific', () => {
-        // Test code here
-        assert.equal(result, expected);
+// GIUSTO: Test funzione reale con dipendenze mockkate
+TestSetup.setup();          // Mock dependencies
+handleNumberClick(2);       // Call REAL function from match.js  
+assert.equal(result, expected); // Test real behavior
+TestSetup.teardown();       // Restore original dependencies
+```
+
+## 📝 Aggiungere Nuovi Test
+
+### **1. Creare Nuovo Test File**
+```javascript
+// test/test-my-feature.js
+
+async function runMyFeatureTest() {
+    TestResults.reset();
+    
+    describe('My Feature', function() {
+        it('should do something specific', function() {
+            // Test logic here
+            assert.equal(actual, expected, 'Description');
+        });
     });
-});
+    
+    TestResults.summary();
+    return TestResults.failed === 0;
+}
 ```
 
-### Async Support
-```javascript
-it('should handle async operations', async () => {
-    const result = await someAsyncFunction();
-    assert.ok(result);
-});
-```
-
-## 🐛 Debugging Tests
-
-### Console Output
-- ✅ Green checkmarks for passing tests
-- ❌ Red X marks for failing tests
-- 💥 Error details for debugging
-
-### Common Issues
-1. **DOM not available**: Some tests require mock DOM elements
-2. **Module dependencies**: Ensure all JS files load in correct order
-3. **Async timing**: Use proper async/await for timing-dependent tests
-
-## 📊 Test Results Interpretation
-
-### Success Indicators
-- All tests show ✅ green checkmarks
-- Final summary shows 100% success rate
-- Console shows "🎉 All tests passed!"
-
-### Failure Indicators
-- Any ❌ red X marks in output
-- Error messages with specific failure details
-- Success rate below 100%
-
-## 🔧 Adding New Tests
-
-### 1. Create Test File
-```javascript
-// test-new-feature.js
-describe('New Feature', () => {
-    it('should work correctly', () => {
-        // Test implementation
-        assert.equal(newFeature(), expectedResult);
-    });
-});
-```
-
-### 2. Update Test Runner
-Add script tag to `test-runner.html`:
+### **2. Aggiungere al Test Runner**
 ```html
-<script src="test-new-feature.js"></script>
+<!-- In test-runner.html -->
+<script src="test-my-feature.js"></script>
+
+<button id="runMyFeatureTest" class="btn">
+    🔧 Run My Feature Test
+</button>
 ```
 
-### 3. Test Categories
-- **Unit Tests**: Individual function testing
-- **Integration Tests**: Component interaction testing
-- **UI Tests**: DOM manipulation and display testing
-- **Logic Tests**: Game flow and rule enforcement
+```javascript
+// Nel test-runner.html script
+document.getElementById('runMyFeatureTest').addEventListener('click', () => {
+    runSpecificTest('MyFeature');
+});
+```
 
-## 📈 Best Practices
+## 🐛 Debugging Test
 
-### Test Writing
-1. **One assertion per test** when possible
-2. **Clear test descriptions** using "should" statements
-3. **Setup/teardown** using beforeEach patterns
-4. **Mock external dependencies** for isolation
+### **Console Output**
+- Tutti i test loggano nella console browser
+- Output dettagliato per ogni assertion
+- Stack trace per errori
 
-### Test Organization
-1. **Group related tests** in describe blocks
-2. **Use descriptive names** for test suites
-3. **Test edge cases** and error conditions
-4. **Maintain test independence** (no shared state)
+### **Mock Inspection**
+```javascript
+// Ispezionare stato mock durante test
+console.log('MockState:', NumberClickMocks.MockMatchState);
+console.log('Mock DOM:', NumberClickMocks.mockWhiteLabels);
+```
 
-## 🔄 Continuous Testing
+### **Test Isolation**
+- Ogni test chiama `NumberClickMocks.reset()`
+- Nessuna interferenza tra test
+- Stato pulito per ogni test case
 
-### Development Workflow
-1. Write failing test first (TDD approach)
-2. Implement feature to make test pass
-3. Refactor while keeping tests green
-4. Add new tests for edge cases
+## 🎯 Best Practices
 
-### Before Commits
-1. Run full test suite
-2. Ensure 100% pass rate
-3. Add tests for new features
-4. Update documentation if needed
+1. **Un test, una responsabilità**: Ogni test verifica un comportamento specifico
+2. **Nomi descriptivi**: `should show only superscript on first click`
+3. **Setup/teardown**: Sempre resettare stato prima del test
+4. **Assertions multiple**: Verificare tutti gli aspetti importanti
+5. **Edge cases**: Testare valori limite (0, 10, null, etc.)
 
-## 📝 Notes
+## 🚀 Esecuzione Continua
 
-- Tests use a custom lightweight framework (no external dependencies)
-- Some tests use mock DOM elements and may not reflect full browser behavior
-- For complete integration testing, manual testing in the actual application is recommended
-- Browser compatibility: Modern browsers with ES6+ support required
+Per sviluppo iterativo:
+1. Modifica il codice in `js/match.js`
+2. Ricarica `test/test-runner.html`
+3. Ri-esegui i test
+4. Verifica che passino tutti
+5. Ripeti
+
+---
+
+**Test strutturati, modulari e affidabili per garantire la qualità del codice!** 🎯

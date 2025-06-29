@@ -24,9 +24,9 @@ function getCookie(cname) {
 /**
  * Save player names to cookies
  */
-function saveNames() {
-    var player1 = document.getElementById('player1').value;
-    var player2 = document.getElementById('player2').value;
+function savePlayerNames() {
+    var player1 = document.getElementById('player1')?.value || '';
+    var player2 = document.getElementById('player2')?.value || '';
     var d = new Date();
     d.setTime(d.getTime() + (60 * 60 * 24 * 60 * 1000)); // Two months
     var expires = "expires=" + d.toUTCString();
@@ -49,45 +49,110 @@ function formatDateTime(date) {
     return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
 }
 
-/**
- * Calculate total errors for a player
- * @param {Object} player - Player score object
- * @returns {number} Total errors
- */
-function totalErrors(player) {
-    return player.missErrors + player.breakErrors + player.kickErrors + player.safetyErrors + player.positionError;
-}
+// ===== LOCAL STORAGE MANAGEMENT =====
 
 /**
- * Calculate TPA score for a player
- * @param {Object} player - Player score object
- * @returns {number} TPA score (0-1000)
+ * Save match parameters to localStorage
+ * @param {Object} params - Match parameters
  */
-function tpaScore(player) {
-    return Math.trunc(player.ballsPotted/(player.ballsPotted+totalErrors(player))*1000);
-}
-
-/**
- * Convert score to display string
- * @param {Object} score - Match score object
- * @returns {string} Formatted score string
- */
-function scoreToString(score) {
-    return `<small>(${score.player1.ballsPotted},${totalErrors(score.player1)},${tpaScore(score.player1)}) <strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong> (${score.player2.ballsPotted},${totalErrors(score.player2)},${tpaScore(score.player2)})</small>`;
-}
-
-/**
- * Generate kick sequence HTML
- * @param {Array} kickIn - Array of KickIn objects
- * @returns {string} HTML string for kick sequence
- */
-function kickSequence(kickIn) {
-    let kickSequence = '';
-    for (let i = 0; i < kickIn.length; i++) {
-        if (kickIn[i].isFirst) 
-            kickSequence += `<span class="circle-kick"><label class="fs-6 col-1">${kickIn[i].player}</label></span>`;
-        else
-            kickSequence += `<label class="fs-6 col-1">${kickIn[i].player}</label>`;
+function saveMatchParams(params) {
+    try {
+        localStorage.setItem('tpa_match_params', JSON.stringify(params));
+        console.log('Match params saved:', params);
+    } catch (error) {
+        console.error('Failed to save match params:', error);
     }
-    return kickSequence;
+}
+
+/**
+ * Load match parameters from localStorage
+ * @returns {Object|null} Match parameters or null if not found
+ */
+function loadMatchParams() {
+    try {
+        const params = localStorage.getItem('tpa_match_params');
+        return params ? JSON.parse(params) : null;
+    } catch (error) {
+        console.error('Failed to load match params:', error);
+        return null;
+    }
+}
+
+/**
+ * Clear match parameters from localStorage
+ */
+function clearMatchParams() {
+    try {
+        localStorage.removeItem('tpa_match_params');
+        console.log('Match params cleared');
+    } catch (error) {
+        console.error('Failed to clear match params:', error);
+    }
+}
+
+/**
+ * Save match state to localStorage
+ * @param {Object} state - Current match state
+ */
+function saveMatchState(state) {
+    try {
+        localStorage.setItem('tpa_match_state', JSON.stringify(state));
+    } catch (error) {
+        console.error('Failed to save match state:', error);
+    }
+}
+
+/**
+ * Load match state from localStorage
+ * @returns {Object|null} Match state or null if not found
+ */
+function loadMatchState() {
+    try {
+        const state = localStorage.getItem('tpa_match_state');
+        return state ? JSON.parse(state) : null;
+    } catch (error) {
+        console.error('Failed to load match state:', error);
+        return null;
+    }
+}
+
+/**
+ * Clear match state from localStorage
+ */
+function clearMatchState() {
+    try {
+        localStorage.removeItem('tpa_match_state');
+    } catch (error) {
+        console.error('Failed to clear match state:', error);
+    }
+}
+
+// ===== NAVIGATION UTILITIES =====
+
+/**
+ * Navigate to login page
+ */
+function goToLogin() {
+    window.location.href = 'login.html';
+}
+
+/**
+ * Navigate to match page
+ */
+function goToMatch() {
+    window.location.href = 'match.html';
+}
+
+/**
+ * Get game type display name
+ * @param {string} gameType - Game type ('8', '9', '10')
+ * @returns {string} Display name
+ */
+function getGameTypeDisplayName(gameType) {
+    const gameTypeNames = {
+        '8': '8-ball',
+        '9': '9-ball', 
+        '10': '10-ball'
+    };
+    return gameTypeNames[gameType] || 'Unknown';
 }

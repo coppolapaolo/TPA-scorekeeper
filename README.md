@@ -1,37 +1,176 @@
-# TPA Scorekeeper
+# 🎱 TPA Scorekeeper - Simplified
 
-Welcome to the "TPA Scorekeeper" app, a web-based tool designed to help players and enthusiasts keep track of scores during a 9-ball pool game using the Total Performance Average (TPA) rating method. This app allows you to input player names, mark balls pocketed, note errors committed, and manage multiple innings, ultimately providing a comprehensive TPA scoresheet and final score summary at the end of the match.
+**Professional billiards score tracking made simple**
 
-## Features
+## 🎯 **Overview**
 
-- **Player Name Entry**: Input names for the two players at the start of the game.
-- **Score Tracking**: Mark the number of balls pocketed and errors made for each player. 
-- **Error Logging**: Follows the official TPA notation for all possible errors, ensuring accurate scorekeeping.
-- **Match Summary**: Provides a detailed TPA scoresheet and final scoring, including balls pocketed, errors committed, TPA score, and racks won, updated in real-time throughout the game.
-- **Responsive Design**: Optimized for smartphones but compatible with any modern browser that supports JavaScript.
+A streamlined scorekeeper for billiards players with a clean, modular architecture. Features simple number input with superscript notation for break shots.
 
-## System Requirements
+---
 
-The app is built with Bootstrap 5.3.2 and jQuery 3.6.0, ensuring compatibility across all modern browsers with JavaScript enabled. It is designed for smartphone use but functions seamlessly on desktop browsers as well.
+## 🚀 **Quick Start**
 
-## Accessing the App
+1. **Open** `login.html` in your browser
+2. **Enter** player names (auto-saved)
+3. **Select** game type (8-ball, 9-ball, 10-ball)  
+4. **Click** Start to begin scoring
 
-TPA Scorekeeper is readily accessible at [https://www.coppolapaolo.it/tpa.html](https://www.coppolapaolo.it/tpa.html). The app uses cookies to remember player names for convenience. It can also be run locally or installed on any server for personal use.
+---
 
-## How to Use
+## 📋 **Features**
 
-1. Start by entering the player names and clicking the 'Start' button.
-2. Use the player name buttons to toggle between players. The active player is highlighted.
-3. Begin each player's turn by noting the number of balls pocketed. For break shots, include both the balls pocketed on the break and the total for the turn.
-4. Log any errors or fouls as per TPA terminology next.
-5. Switch to the other player by pressing the player button. If the button isn't enabled, it means the entry doesn't comply with TPA rules.
-6. Press the 'G' button to indicate a game win (when the 9-ball is pocketed).
-7. The ongoing score is displayed below the players' names, showing pocketed balls, errors, TPA score, and racks won in real-time.
+### **✅ Player Setup**
+- Clean login interface
+- Auto-save player names (cookies)
+- Game type selection
+- Date/time stamping
 
-## License
+### **✅ Scoring Interface** 
+- Player toggle buttons
+- Number input (0-10) with superscript logic
+- Professional scoresheet layout
+- Responsive design for mobile
 
-TPA Scorekeeper is released under the AGPL license. For more information, please see the license file included in the repository.
+### **✅ Number Input Logic**
+```
+Empty box → Click "3" → ³3          (break)
+³3 → Click "5" → ³3 5               (total) 
+³3 5 → Click "7" → ³7               (reset cycle)
+```
 
-## Learn More About TPA Rating
+---
 
-To delve deeper into the Accu-Stats TPA Rating system and understand the methodology behind our scoring, visit [Accu-Stats TPA Rating](https://billiards.colostate.edu/faq/rating/accu-stats-tpa/).
+## 🏗️ **Architecture**
+
+### **Multi-Page Structure**
+- `login.html` - Player setup and game configuration
+- `match.html` - Main scoring interface
+
+### **Modular JavaScript**
+```
+js/
+├── utils.js     ← Utilities, localStorage, cookies
+├── login.js     ← Login form logic
+├── match.js     ← Match state and number input  
+└── ui.js        ← DOM manipulation helpers
+```
+
+### **State Management**
+- **Cookies**: Player names (persistent)
+- **localStorage**: Match parameters and state
+- **Clean separation** between login and match data
+
+---
+
+## 🎮 **Usage**
+
+### **Starting a Match**
+1. Enter player names in `login.html`
+2. Select game type (8/9/10-ball)
+3. Click "Start Match"
+4. Automatically redirects to `match.html`
+
+### **Scoring**
+- **Player Toggle**: Click player name buttons
+- **Number Input**: Click 0-10 for ball counts
+- **Reset**: Click on score boxes to clear
+- **Navigation**: "Back to Setup" returns to login
+
+### **Display Format**
+- **Superscript**: Break shots (³3)
+- **Normal**: Regular shots (5)
+- **Combined**: Break + total (³3 5)
+
+---
+
+## 📱 **Browser Support**
+
+- ✅ **Chrome/Edge/Safari**: Full support
+- ✅ **Firefox**: Full support  
+- ✅ **Mobile browsers**: Optimized
+- ✅ **localStorage required**: Modern browsers only
+
+---
+
+## 🔧 **Development**
+
+### **Local Development**
+```bash
+# No build process required
+# Simply open login.html in browser
+```
+
+### **File Structure**
+```
+project/
+├── login.html          ← Entry point
+├── match.html          ← Main interface
+├── modern-tpa.css      ← Styles
+└── js/                 ← JavaScript modules
+```
+
+### **Adding Features**
+1. **Login features**: Edit `js/login.js`
+2. **Match features**: Edit `js/match.js`  
+3. **UI helpers**: Edit `js/ui.js`
+4. **Utilities**: Edit `js/utils.js`
+
+---
+
+## 📊 **Data Flow**
+
+```
+login.html
+    ↓ (form submit)
+localStorage.matchParams
+    ↓ (page redirect)  
+match.html
+    ↓ (loads params)
+localStorage.matchState
+    ↓ (auto-save)
+Persistent state
+```
+
+---
+
+## 🎨 **Customization**
+
+### **Styling**
+- Edit `modern-tpa.css` for visual changes
+- Professional billiards theme (green/gold)
+- Bootstrap 5.3.2 integration
+
+### **Game Types**
+- Easily add new game types in `login.js`
+- Update `getGameTypeDisplayName()` in `utils.js`
+
+### **Score Logic**
+- Modify `handleNumberClick()` in `match.js`
+- Customize display in `updatePlayerDisplay()`
+
+---
+
+## 🏆 **Roadmap**
+
+- [ ] **Session persistence** - Resume interrupted matches
+- [ ] **Export functionality** - Save scoresheets  
+- [ ] **Statistics tracking** - Player performance
+- [ ] **Tournament mode** - Multi-match support
+- [ ] **Offline support** - PWA capabilities
+
+---
+
+## 📝 **License**
+
+GNU Affero General Public License v3.0
+
+---
+
+## 🔗 **Links**
+
+- **Live Demo**: [https://www.coppolapaolo.it/tpa.html](https://www.coppolapaolo.it/tpa.html)
+- **Original TPA System**: [Accu-Stats TPA Rating](https://billiards.colostate.edu/faq/rating/accu-stats-tpa/)
+
+---
+
+**Built with ❤️ for the billiards community**

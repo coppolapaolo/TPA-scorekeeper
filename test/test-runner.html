@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TPA Scorekeeper - Essential Tests</title>
+    <title>TPA Scorekeeper - Test Runner</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 2rem;
             background: #f8f9fa;
@@ -22,12 +22,35 @@
             text-align: center;
         }
         
-        .test-results {
+        .test-controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .test-output {
             background: white;
             padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+        }
+        
+        .console-output {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 1rem;
         }
         
         .btn {
@@ -46,20 +69,11 @@
             background: #4a7c59;
         }
         
-        .test-output {
-            background: #1e1e1e;
-            color: #fff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow-y: auto;
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
         }
-
+        
         .test-info {
             background: #e7f3ff;
             border: 1px solid #b8daff;
@@ -71,57 +85,62 @@
 </head>
 <body>
     <div class="test-header">
-        <h1>🧪 TPA Scorekeeper - Essential Tests</h1>
-        <p>Only 2 critical tests for core functionality</p>
+        <h1>🧪 TPA Scorekeeper - Test Runner</h1>
+        <p>Modular test execution system</p>
     </div>
 
-    <div class="test-results">
+    <div class="test-controls">
         <div class="test-info">
-            <h3>Test Coverage:</h3>
-            <ol>
-                <li><strong>Player Names Display:</strong> Mario/Luca appear correctly in buttons</li>
-                <li><strong>Warning Badge:</strong> Badge appears after 0 P and player switch</li>
-            </ol>
+            <h3>📋 Available Tests:</h3>
+            <ul style="text-align: left; display: inline-block;">
+                <li><strong>Number Click Logic Test</strong> - Tests the ³ → ³5 → stop behavior</li>
+            </ul>
         </div>
 
-        <div style="text-align: center; margin-bottom: 1rem;">
-            <button id="runTestsBtn" class="btn" onclick="runEssentialTests()">
-                🚀 Run Essential Tests
+        <div>
+            <button id="runNumberClickTest" class="btn">
+                🔢 Run Number Click Test
             </button>
-            <button id="clearOutputBtn" class="btn" onclick="clearOutput()">
+            <button id="clearOutput" class="btn" onclick="clearTestOutput()">
                 🧹 Clear Output
             </button>
         </div>
+    </div>
 
+    <div class="test-output">
         <h3>Test Output:</h3>
-        <div id="testOutput" class="test-output">
-            Click "Run Essential Tests" to start...
+        <div id="testOutput" class="console-output">
+            Click a test button to start...
         </div>
     </div>
 
-    <!-- Load Application Code -->
-    <script src="../js/utils.js"></script>
-    <script src="../js/models.js"></script>
-    <script src="../js/warning-badges.js"></script>
-    <script src="../js/ui.js"></script>
-    <script src="../js/game-logic.js"></script>
-    <script src="../js/app.js"></script>
-    
-    <!-- Load Test Framework (Simple) -->
+    <!-- Load Test Framework -->
     <script src="test-framework.js"></script>
     
-    <!-- Load Only Essential Tests -->
-    <script src="test-simple.js"></script>
+    <!-- DEBUG: Test percorsi files -->
+    <script>
+        console.log('🔧 Base URL:', window.location.href);
+        console.log('🔧 Trying to load files...');
+    </script>
+    
+    <!-- Load Application Code (THE REAL CODE) -->
+    <script src="../js/utils.js" onload="console.log('✅ utils.js loaded')" onerror="console.error('❌ utils.js FAILED')"></script>
+    <script src="../js/match.js" onload="console.log('✅ match.js loaded')" onerror="console.error('❌ match.js FAILED')"></script>
+    
+    <!-- Load Specific Test Files -->
+    <script src="test-number-click.js" onload="console.log('✅ test-number-click.js loaded')" onerror="console.error('❌ test-number-click.js FAILED')"></script>
 
     <script>
-        // Capture console output for display
-        const originalConsoleLog = console.log;
+        // ===== TEST RUNNER LOGIC =====
+        
         let testOutput = [];
+        const originalConsoleLog = console.log;
 
         function captureConsole() {
             testOutput = [];
             console.log = function(...args) {
-                testOutput.push(args.join(' '));
+                const message = args.join(' ');
+                testOutput.push(message);
                 originalConsoleLog.apply(console, args);
                 updateTestDisplay();
             };
@@ -135,38 +154,55 @@
             document.getElementById('testOutput').textContent = testOutput.join('\n');
         }
 
-        async function runEssentialTests() {
-            const btnEl = document.getElementById('runTestsBtn');
-            
-            // Update UI
-            btnEl.disabled = true;
-            btnEl.textContent = '🏃‍♂️ Running...';
-            
-            // Clear previous output and capture console
-            clearOutput();
-            captureConsole();
-            
-            try {
-                // Run tests
-                await runTests();
-                
-            } catch (error) {
-                console.error('Test runner error:', error);
-            } finally {
-                restoreConsole();
-                btnEl.disabled = false;
-                btnEl.textContent = '🚀 Run Essential Tests';
-            }
-        }
-
-        function clearOutput() {
+        function clearTestOutput() {
             testOutput = [];
             document.getElementById('testOutput').textContent = 'Output cleared...';
         }
 
+        async function runSpecificTest(testName) {
+            const button = document.getElementById(`run${testName}Test`);
+            
+            // Update UI
+            button.disabled = true;
+            button.textContent = '🏃‍♂️ Running...';
+            
+            // Clear and capture console
+            clearTestOutput();
+            captureConsole();
+            
+            try {
+                console.log(`🧪 Running ${testName} Test...\n`);
+                
+                // Run the specific test
+                if (testName === 'NumberClick' && typeof runNumberClickTest === 'function') {
+                    await runNumberClickTest();
+                } else {
+                    console.error(`Test ${testName} not found!`);
+                }
+                
+            } catch (error) {
+                console.error('💥 Test runner error:', error);
+            } finally {
+                restoreConsole();
+                button.disabled = false;
+                button.textContent = `🔢 Run ${testName} Test`;
+            }
+        }
+
+        // ===== EVENT LISTENERS =====
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up test button listeners
+            document.getElementById('runNumberClickTest').addEventListener('click', () => {
+                runSpecificTest('NumberClick');
+            });
+            
+            console.log('Test runner initialized');
+        });
+
         // Global error handler
         window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
+            console.error('🚨 Global error:', event.error?.message || event.error);
         });
     </script>
 </body>
