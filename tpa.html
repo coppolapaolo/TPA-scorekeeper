@@ -99,7 +99,43 @@
             align-items: center;
             justify-content: center;
         }
-    
+
+        /* History mode styles */
+        .history-mode #scoreButtons {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .history-mode #playersGroup label {
+            background-color: #ff9800 !important;
+            border-color: #ff9800 !important;
+            color: white !important;
+        }
+        .history-indicator {
+            background-color: #ff9800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .history-mode .history-indicator {
+            display: block;
+        }
+        .edit-mode .history-indicator {
+            display: block;
+            background-color: #dc3545;
+        }
+
+        #historyNav button {
+            font-size: 14px;
+            padding: 8px;
+        }
+        #historyNav button:disabled {
+            opacity: 0.4;
+        }
+
     </style>
     <meta charset="utf-8">
 </head>
@@ -128,7 +164,11 @@
     </form>
 
     <h3 id="dateTitle" class="text-center mb-3" style="display: none;">DATA</h3>
-        
+
+    <div id="historyIndicator" class="history-indicator">
+        Rack <span id="historyRack">1</span>, Turno <span id="historyTurn">1</span>
+    </div>
+
     <div id="main" class="container text-center" style="display: none;">
         <div class="row  align-items-center">
             <div id="kicks" class="col-5 offset-6 mb-1">
@@ -259,6 +299,14 @@
                 </div>
             </div>
         </div>
+        <div id="historyNav" class="row justify-content-center mt-3" style="display: none;">
+            <div class="col-4">
+                <button type="button" id="btnHistoryBack" class="btn btn-warning w-100" onclick="navigateBack()">← undo</button>
+            </div>
+            <div class="col-4">
+                <button type="button" id="btnHistoryForward" class="btn btn-warning w-100" onclick="navigateForward()">redo →</button>
+            </div>
+        </div>
     </div>
     <div id="endMatch" class="justify-content-center" style="display: none;">
         <button type="button" class="btn btn-primary col-7" onclick="endMatch()">End Match</button>
@@ -351,6 +399,10 @@
                 this.currentPlayer = 1;
                 this.gameType = gameType;
                 this.racks.push({turns:[null, new Turn(this.currentPlayer,true,this.gameType)]});
+                // History navigation state
+                this.viewingRack = null;    // null = viewing live position
+                this.viewingTurn = null;
+                this.isHistoryMode = false;
             }
 
             annotate(event) {// button listener
@@ -555,6 +607,73 @@
                 } else {
                     turn.consecutiveErrors = 0;
                 }
+            }
+
+            // History navigation methods
+            getViewedTurn() {
+                if (this.isHistoryMode) {
+                    return this.racks[this.viewingRack].turns[this.viewingTurn];
+                }
+                return this.getTurn();
+            }
+
+            getViewingPosition() {
+                return this.isHistoryMode
+                    ? { rack: this.viewingRack, turn: this.viewingTurn }
+                    : { rack: this.currentRack, turn: this.currentTurn };
+            }
+
+            navigatePrevious() {
+                const current = this.getViewingPosition();
+
+                if (current.turn > 1) {
+                    this.viewingRack = current.rack;
+                    this.viewingTurn = current.turn - 1;
+                    this.isHistoryMode = true;
+                } else if (current.rack > 1) {
+                    this.viewingRack = current.rack - 1;
+                    this.viewingTurn = this.racks[this.viewingRack].turns.length - 1;
+                    this.isHistoryMode = true;
+                }
+                return this.isHistoryMode;
+            }
+
+            navigateNext() {
+                if (!this.isHistoryMode) return false;
+
+                const current = this.getViewingPosition();
+                const turnsInCurrentRack = this.racks[current.rack].turns.length - 1;
+
+                if (current.turn < turnsInCurrentRack) {
+                    this.viewingTurn = current.turn + 1;
+                } else if (current.rack < this.currentRack) {
+                    this.viewingRack = current.rack + 1;
+                    this.viewingTurn = 1;
+                } else {
+                    this.exitHistoryMode();
+                }
+
+                if (this.viewingRack === this.currentRack && this.viewingTurn === this.currentTurn) {
+                    this.exitHistoryMode();
+                }
+
+                return this.isHistoryMode;
+            }
+
+            exitHistoryMode() {
+                this.isHistoryMode = false;
+                this.viewingRack = null;
+                this.viewingTurn = null;
+            }
+
+            canNavigatePrevious() {
+                const pos = this.getViewingPosition();
+                return !(pos.rack === 1 && pos.turn === 1);
+            }
+
+            canNavigateNext() {
+                if (!this.isHistoryMode) return false;
+                return true;
             }
         }
 
@@ -799,7 +918,11 @@
         let match = null;
 
         function startMatch() {
-            match = new Match(getCookie('player1'),getCookie('player2'),document.querySelector('input[name="gameType"]:checked').value);
+            // Read names directly from inputs (not cookies) to avoid timing issues
+            const player1Name = document.getElementById('player1').value || 'Player 1';
+            const player2Name = document.getElementById('player2').value || 'Player 2';
+            saveNames(); // Save to cookies for next time
+            match = new Match(player1Name, player2Name, document.querySelector('input[name="gameType"]:checked').value);
 
             document.getElementById('dateTitle').style.display = 'block';
             document.getElementById('main').style.display = 'block';
@@ -822,6 +945,393 @@
 
             updateLabels(match.getTurn());
             updateButtons(match.getTurn());
+            initSwipeNavigation();
+        }
+
+        // Swipe navigation
+        function initSwipeNavigation() {
+            const mainDiv = document.getElementById('main');
+            let startX = 0;
+            let startY = 0;
+            const SWIPE_THRESHOLD = 50;
+            const SWIPE_RESTRAINT = 100;
+
+            // Touch events for mobile
+            mainDiv.addEventListener('touchstart', function(e) {
+                startX = e.changedTouches[0].screenX;
+                startY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            mainDiv.addEventListener('touchend', function(e) {
+                const endX = e.changedTouches[0].screenX;
+                const endY = e.changedTouches[0].screenY;
+                handleSwipeGesture(endX - startX, endY - startY);
+            }, { passive: true });
+
+            // Mouse events for desktop testing
+            let mouseDown = false;
+            let dragStartX = 0;
+            let dragStartY = 0;
+
+            mainDiv.addEventListener('mousedown', function(e) {
+                mouseDown = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                console.log('drag start', dragStartX, dragStartY);
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (mouseDown) {
+                    e.preventDefault(); // Prevent text selection while dragging
+                }
+            });
+
+            document.addEventListener('mouseup', function(e) {
+                if (mouseDown) {
+                    const deltaX = e.clientX - dragStartX;
+                    const deltaY = e.clientY - dragStartY;
+                    console.log('drag end, delta', deltaX, deltaY);
+                    mouseDown = false;
+
+                    if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaY) < SWIPE_RESTRAINT) {
+                        console.log('swipe detected!', deltaX < 0 ? 'LEFT' : 'RIGHT');
+                        handleSwipeGesture(deltaX, deltaY);
+                    }
+                }
+            });
+
+            function handleSwipeGesture(deltaX, deltaY) {
+                if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaY) < SWIPE_RESTRAINT) {
+                    if (deltaX < 0) {
+                        handleSwipeLeft();
+                    } else {
+                        handleSwipeRight();
+                    }
+                }
+            }
+        }
+
+        function handleSwipeLeft() {
+            navigateBack();
+        }
+
+        function handleSwipeRight() {
+            navigateForward();
+        }
+
+        function navigateBack() {
+            if (match.navigatePrevious()) {
+                enterViewMode();
+                updateHistoryNavButtons();
+            }
+        }
+
+        function navigateForward() {
+            if (match.isHistoryMode) {
+                match.navigateNext();
+                if (!match.isHistoryMode) {
+                    exitViewMode();
+                } else {
+                    updateViewModeDisplay();
+                }
+                updateHistoryNavButtons();
+            }
+        }
+
+        function updateHistoryNavButtons() {
+            const historyNav = document.getElementById('historyNav');
+            const btnBack = document.getElementById('btnHistoryBack');
+            const btnForward = document.getElementById('btnHistoryForward');
+
+            // Show nav buttons if there's any history (more than just the current turn)
+            const hasHistory = match.currentRack > 1 || match.currentTurn > 1;
+            historyNav.style.display = hasHistory ? 'flex' : 'none';
+
+            // Update button states
+            btnBack.disabled = !match.canNavigatePrevious();
+            btnForward.disabled = !match.isHistoryMode;
+        }
+
+        // View mode functions
+        function enterViewMode() {
+            document.body.classList.add('history-mode');
+            updateViewModeDisplay();
+        }
+
+        function exitViewMode() {
+            document.body.classList.remove('history-mode');
+            document.body.classList.remove('edit-mode');
+            updateLabels(match.getTurn());
+            updateButtons(match.getTurn());
+            document.getElementById('score').textContent = '';
+            document.getElementById('score').insertAdjacentHTML('beforeend', scoreToString(match.score));
+            updateHistoryNavButtons();
+        }
+
+        function updateViewModeDisplay() {
+            const viewedTurn = match.getViewedTurn();
+            const pos = match.getViewingPosition();
+
+            document.getElementById('historyRack').textContent = pos.rack;
+            document.getElementById('historyTurn').textContent = pos.turn;
+
+            displayHistoricalTurn(viewedTurn);
+        }
+
+        function displayHistoricalTurn(turn) {
+            // Clear both player displays
+            document.getElementById('whiteLabel1').textContent = '';
+            document.getElementById('whiteLabel2').textContent = '';
+            document.getElementById('grayLabel1').textContent = '';
+            document.getElementById('grayLabel2').textContent = '';
+            document.getElementById('circle1').style.border = 'none';
+            document.getElementById('circle2').style.border = 'none';
+            document.getElementById('kicks').textContent = '';
+
+            // Display the viewed turn
+            const playerLabel = turn.player === 1 ? 'whiteLabel1' : 'whiteLabel2';
+            const grayLabel = turn.player === 1 ? 'grayLabel1' : 'grayLabel2';
+            const circle = turn.player === 1 ? 'circle1' : 'circle2';
+
+            let whiteLabelText = '';
+            if (turn.tpaAnnotation.breakPotted) {
+                whiteLabelText += '<sup>' + turn.tpaAnnotation.breakPotted + '</sup>';
+            }
+            whiteLabelText += (turn.tpaAnnotation.totalPotted !== null ? turn.tpaAnnotation.totalPotted : '');
+            whiteLabelText += ' ' + turn.tpaAnnotation.mainNote();
+
+            const labelEl = document.getElementById(playerLabel);
+            labelEl.textContent = '';
+            labelEl.insertAdjacentHTML('beforeend', whiteLabelText);
+
+            document.getElementById(grayLabel).textContent = turn.tpaAnnotation.secondaryNote();
+            document.getElementById(circle).style.border = turn.isWinning() ? "2px solid black" : "none";
+
+            // Show kicks
+            const kicksEl = document.getElementById('kicks');
+            kicksEl.textContent = '';
+            kicksEl.insertAdjacentHTML('beforeend', kickSequence(turn.tpaAnnotation.kickSequence));
+
+            // Show historical score
+            if (turn.score) {
+                const scoreEl = document.getElementById('score');
+                scoreEl.textContent = '';
+                scoreEl.insertAdjacentHTML('beforeend', turn.score);
+            }
+        }
+
+        // Edit mode functions
+        let originalTurnSnapshot = null;
+        let editingPosition = null;
+
+        function createAnnotationSnapshot(turn) {
+            return {
+                totalPotted: turn.tpaAnnotation.totalPotted,
+                breakPotted: turn.tpaAnnotation.breakPotted,
+                missErrors: turn.tpaAnnotation.missErrors,
+                kick: turn.tpaAnnotation.kick,
+                pocketed: turn.tpaAnnotation.pocketed,
+                safety: turn.tpaAnnotation.safety,
+                push: turn.tpaAnnotation.push,
+                safeX: turn.tpaAnnotation.safeX,
+                noHit: turn.tpaAnnotation.noHit,
+                kickSequence: turn.tpaAnnotation.kickSequence.slice(),
+                winningTurn: turn.winningTurn
+            };
+        }
+
+        function annotationsEqual(snap1, snap2) {
+            return JSON.stringify(snap1) === JSON.stringify(snap2);
+        }
+
+        function enterEditMode() {
+            if (!match.isHistoryMode) return;
+
+            const pos = match.getViewingPosition();
+            const subsequentTurns = countSubsequentTurns(pos);
+
+            const message = 'Modificare Rack ' + pos.rack + ', Turno ' + pos.turn + '?\n\n' +
+                'Questo eliminerà ' + subsequentTurns + ' turni successivi.\n\n' +
+                'Continuare?';
+
+            if (!confirm(message)) {
+                return;
+            }
+
+            // Truncate all subsequent turns
+            match.racks[pos.rack].turns.length = pos.turn + 1;
+            match.racks.length = pos.rack + 1;
+
+            // Set current position to this turn
+            match.currentRack = pos.rack;
+            match.currentTurn = pos.turn;
+            match.isHistoryMode = false;
+
+            // Reset the turn's annotation to allow re-entry
+            const turn = match.getTurn();
+
+            // Set the correct player (the one who made this turn)
+            match.currentPlayer = turn.player;
+            turn.tpaAnnotation.reset();
+            turn.winningTurn = false;
+            turn.score = null;
+
+            // Recalculate scores up to (but not including) this turn
+            recalculateAllScores();
+
+            // Exit history mode and return to normal
+            document.body.classList.remove('history-mode');
+
+            updateLabels(turn);
+            updateButtons(turn);
+            updateHistoryNavButtons();
+            updateSwitchPlayerStatus();
+            document.getElementById('score').textContent = '';
+            document.getElementById('score').insertAdjacentHTML('beforeend', scoreToString(match.score));
+        }
+
+        function checkForEditChanges() {
+            if (!editingPosition) return;
+
+            const turn = match.getTurn();
+            const currentSnapshot = createAnnotationSnapshot(turn);
+
+            if (!annotationsEqual(originalTurnSnapshot, currentSnapshot)) {
+                showEditConfirmation();
+            }
+        }
+
+        function countSubsequentTurns(position) {
+            let count = 0;
+            count += match.racks[position.rack].turns.length - 1 - position.turn;
+            for (let r = position.rack + 1; r < match.racks.length; r++) {
+                count += match.racks[r].turns.length - 1;
+            }
+            return count;
+        }
+
+        function showEditConfirmation() {
+            const pos = editingPosition;
+            const subsequentTurns = countSubsequentTurns(pos);
+
+            const message = 'Stai modificando Rack ' + pos.rack + ', Turno ' + pos.turn + '.\n\n' +
+                'Questo eliminerà ' + subsequentTurns + ' turni successivi e ricalcolerà i punteggi.\n\n' +
+                'Continuare?';
+
+            if (confirm(message)) {
+                applyHistoricalEdit();
+            } else {
+                revertEdit();
+            }
+        }
+
+        function revertEdit() {
+            const turn = match.getTurn();
+            const snap = originalTurnSnapshot;
+
+            turn.tpaAnnotation.totalPotted = snap.totalPotted;
+            turn.tpaAnnotation.breakPotted = snap.breakPotted;
+            turn.tpaAnnotation.missErrors = snap.missErrors;
+            turn.tpaAnnotation.kick = snap.kick;
+            turn.tpaAnnotation.pocketed = snap.pocketed;
+            turn.tpaAnnotation.safety = snap.safety;
+            turn.tpaAnnotation.push = snap.push;
+            turn.tpaAnnotation.safeX = snap.safeX;
+            turn.tpaAnnotation.noHit = snap.noHit;
+            turn.tpaAnnotation.kickSequence = snap.kickSequence.slice();
+            turn.winningTurn = snap.winningTurn;
+
+            exitEditMode();
+        }
+
+        function exitEditMode() {
+            document.body.classList.remove('edit-mode');
+            originalTurnSnapshot = null;
+            editingPosition = null;
+
+            // Return to last rack/turn
+            match.currentRack = match.racks.length - 1;
+            match.currentTurn = match.racks[match.currentRack].turns.length - 1;
+
+            updateLabels(match.getTurn());
+            updateButtons(match.getTurn());
+            document.getElementById('score').textContent = '';
+            document.getElementById('score').insertAdjacentHTML('beforeend', scoreToString(match.score));
+        }
+
+        function applyHistoricalEdit() {
+            const pos = editingPosition;
+
+            // Truncate turns after the edited position in current rack
+            match.racks[pos.rack].turns.length = pos.turn + 1;
+
+            // Remove all subsequent racks
+            match.racks.length = pos.rack + 1;
+
+            // Recalculate all scores
+            recalculateAllScores();
+
+            // Set current position to edited turn
+            match.currentRack = pos.rack;
+            match.currentTurn = pos.turn;
+
+            // Exit edit mode
+            document.body.classList.remove('edit-mode');
+            originalTurnSnapshot = null;
+            editingPosition = null;
+
+            // Update display
+            updateLabels(match.getTurn());
+            updateButtons(match.getTurn());
+            document.getElementById('score').textContent = '';
+            document.getElementById('score').insertAdjacentHTML('beforeend', scoreToString(match.score));
+        }
+
+        function recalculateAllScores() {
+            // Reset score aggregates
+            match.score = {
+                player1: {
+                    racksWon: 0,
+                    ballsPotted: 0,
+                    missErrors: 0,
+                    breakErrors: 0,
+                    kickErrors: 0,
+                    safetyErrors: 0,
+                    positionError: 0
+                },
+                player2: {
+                    racksWon: 0,
+                    ballsPotted: 0,
+                    missErrors: 0,
+                    breakErrors: 0,
+                    kickErrors: 0,
+                    safetyErrors: 0,
+                    positionError: 0
+                }
+            };
+
+            // Store original position
+            const savedRack = match.currentRack;
+            const savedTurn = match.currentTurn;
+
+            // Iterate through all completed turns and recalculate
+            for (let r = 1; r < match.racks.length; r++) {
+                for (let t = 1; t < match.racks[r].turns.length; t++) {
+                    const turn = match.racks[r].turns[t];
+
+                    // Only update score for completed turns (those with score snapshot)
+                    if (turn.hasBeenPlayed() && turn.score !== null) {
+                        match.currentRack = r;
+                        match.currentTurn = t;
+                        match.updateScore(turn);
+                        turn.score = scoreToString(match.score);
+                    }
+                }
+            }
+
+            // Restore position
+            match.currentRack = savedRack;
+            match.currentTurn = savedTurn;
         }
 
         // Function that takes a list of kick-ins and kick-outs and returns a string with the kick sequence
@@ -862,9 +1372,11 @@
                 } else {
                     document.getElementById('endMatch').classList.remove('d-flex');
                 }
+                // Update history navigation buttons
+                updateHistoryNavButtons();
             }
         }
-        
+
         function updateSwitchPlayerStatus() {
             const radioButtons = document.querySelectorAll('#playersGroup input[type="radio"]');
             const labelsForRadioButtons = document.querySelectorAll('#playersGroup label');
@@ -890,12 +1402,18 @@
 
         document.getElementById('playersGroup').addEventListener('click', togglePlayer);
 
-        // Add a click listener to divPlayers that resets the current turn
+        // Add a click listener to divPlayers that resets the current turn or enters edit mode
         document.getElementById('divPlayers').addEventListener('click', function() {
-            match.getTurn().tpaAnnotation.reset();
-            match.getTurn().winningTurn = false;
-            updateLabels(match.getTurn());
-            updateButtons(match.getTurn());
+            if (match.isHistoryMode) {
+                // In history mode: show confirmation and edit
+                enterEditMode();
+            } else {
+                // Normal behavior: reset current turn
+                match.getTurn().tpaAnnotation.reset();
+                match.getTurn().winningTurn = false;
+                updateLabels(match.getTurn());
+                updateButtons(match.getTurn());
+            }
         });
 
         function htmlDivAnnotation(turn) {
