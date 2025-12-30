@@ -565,24 +565,6 @@
             </div>
         </div>
 
-        <!-- Google Sheets Sync -->
-        <div class="card mb-3">
-            <div class="card-header">Google Sheets Sync</div>
-            <div class="card-body">
-                <div class="form-check mb-2">
-                    <input type="checkbox" class="form-check-input" id="autoSyncEnabled" checked onchange="saveSettings()">
-                    <label class="form-check-label" for="autoSyncEnabled">
-                        Auto-sync completed matches to Google Sheets
-                    </label>
-                </div>
-                <input type="text" class="form-control mb-2" id="googleSheetUrl"
-                       placeholder="Google Apps Script URL" onchange="saveSettings()">
-                <button class="btn btn-outline-primary w-100" onclick="syncPendingMatches()">
-                    <i class="bi bi-cloud-upload"></i> Sync Pending Matches (<span id="pendingCount">0</span>)
-                </button>
-            </div>
-        </div>
-
         <!-- Danger Zone -->
         <div class="card border-danger">
             <div class="card-header bg-danger text-white">Danger Zone</div>
@@ -1968,39 +1950,19 @@
         // Settings Functions
         // ==========================================
 
+        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzn6HJDjup8zqvASM4-cB9zmPcPMi8h-u-iXAXaPDenkr_G9Q2Ap05mrisaWL_Fe8FK4w/exec';
+
         async function loadSettings() {
             const matchCount = await tpaDB.getMatchCount();
             document.getElementById('matchCount').textContent = matchCount;
-
-            const pending = await tpaDB.getPendingMatches();
-            document.getElementById('pendingCount').textContent = pending.length;
-
-            const url = await tpaDB.getSetting('googleSheetUrl');
-            document.getElementById('googleSheetUrl').value = url || '';
-
-            // Auto-sync is enabled only if a URL is configured
-            const hasUrl = url && url.trim().length > 0;
-            document.getElementById('autoSyncEnabled').checked = hasUrl;
-            document.getElementById('autoSyncEnabled').disabled = !hasUrl;
         }
 
-        async function saveSettings() {
-            const url = document.getElementById('googleSheetUrl').value.trim();
-            await tpaDB.setSetting('googleSheetUrl', url);
-
-            // Update checkbox state based on URL
-            const hasUrl = url.length > 0;
-            document.getElementById('autoSyncEnabled').disabled = !hasUrl;
-            document.getElementById('autoSyncEnabled').checked = hasUrl;
+        function getGoogleSheetUrl() {
+            return GOOGLE_SHEET_URL;
         }
 
-        async function getGoogleSheetUrl() {
-            return await tpaDB.getSetting('googleSheetUrl') || '';
-        }
-
-        async function isAutoSyncEnabled() {
-            const url = await getGoogleSheetUrl();
-            return url.trim().length > 0;
+        function isAutoSyncEnabled() {
+            return true; // Always sync to Google Sheets
         }
 
         async function exportData() {
@@ -2044,61 +2006,6 @@
             } catch (e) {
                 alert('Error importing file: ' + e.message);
             }
-        }
-
-        async function syncPendingMatches() {
-            const pending = await tpaDB.getPendingMatches();
-
-            if (pending.length === 0) {
-                alert('No pending matches to sync');
-                return;
-            }
-
-            const url = await getGoogleSheetUrl();
-            let synced = 0;
-
-            for (const matchRecord of pending) {
-                try {
-                    const matchData = {
-                        date: matchRecord.date,
-                        player1: matchRecord.players[0].name,
-                        player2: matchRecord.players[1].name,
-                        player1Score: matchRecord.finalScore.player1.tpaScore,
-                        player2Score: matchRecord.finalScore.player2.tpaScore,
-                        player1RacksWon: matchRecord.finalScore.player1.racksWon,
-                        player2RacksWon: matchRecord.finalScore.player2.racksWon,
-                        player1BallsPotted: matchRecord.finalScore.player1.ballsPotted,
-                        player2BallsPotted: matchRecord.finalScore.player2.ballsPotted,
-                        player1MissErrors: matchRecord.finalScore.player1.missErrors,
-                        player2MissErrors: matchRecord.finalScore.player2.missErrors,
-                        player1BreakErrors: matchRecord.finalScore.player1.breakErrors,
-                        player2BreakErrors: matchRecord.finalScore.player2.breakErrors,
-                        player1KickErrors: matchRecord.finalScore.player1.kickErrors,
-                        player2KickErrors: matchRecord.finalScore.player2.kickErrors,
-                        player1SafetyErrors: matchRecord.finalScore.player1.safetyErrors,
-                        player2SafetyErrors: matchRecord.finalScore.player2.safetyErrors,
-                        player1PositionError: matchRecord.finalScore.player1.positionError,
-                        player2PositionError: matchRecord.finalScore.player2.positionError,
-                        gameType: matchRecord.gameType,
-                        htmlTable: matchRecord.htmlTable
-                    };
-
-                    await fetch(url, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(matchData)
-                    });
-
-                    await tpaDB.markAsSynced(matchRecord.id);
-                    synced++;
-                } catch (e) {
-                    console.error('Error syncing match:', e);
-                }
-            }
-
-            alert('Synced ' + synced + ' of ' + pending.length + ' matches');
-            await loadSettings();
         }
 
         async function clearAllData() {
