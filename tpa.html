@@ -1968,8 +1968,6 @@
         // Settings Functions
         // ==========================================
 
-        const DEFAULT_GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzn6HJDjup8zqvASM4-cB9zmPcPMi8h-u-iXAXaPDenkr_G9Q2Ap05mrisaWL_Fe8FK4w/exec';
-
         async function loadSettings() {
             const matchCount = await tpaDB.getMatchCount();
             document.getElementById('matchCount').textContent = matchCount;
@@ -1977,28 +1975,32 @@
             const pending = await tpaDB.getPendingMatches();
             document.getElementById('pendingCount').textContent = pending.length;
 
-            const autoSync = await tpaDB.getSetting('autoSyncEnabled');
-            document.getElementById('autoSyncEnabled').checked = autoSync !== false;
-
             const url = await tpaDB.getSetting('googleSheetUrl');
-            document.getElementById('googleSheetUrl').value = url || DEFAULT_GOOGLE_SHEET_URL;
+            document.getElementById('googleSheetUrl').value = url || '';
+
+            // Auto-sync is enabled only if a URL is configured
+            const hasUrl = url && url.trim().length > 0;
+            document.getElementById('autoSyncEnabled').checked = hasUrl;
+            document.getElementById('autoSyncEnabled').disabled = !hasUrl;
         }
 
         async function saveSettings() {
-            const autoSync = document.getElementById('autoSyncEnabled').checked;
-            const url = document.getElementById('googleSheetUrl').value;
-            await tpaDB.setSetting('autoSyncEnabled', autoSync);
+            const url = document.getElementById('googleSheetUrl').value.trim();
             await tpaDB.setSetting('googleSheetUrl', url);
+
+            // Update checkbox state based on URL
+            const hasUrl = url.length > 0;
+            document.getElementById('autoSyncEnabled').disabled = !hasUrl;
+            document.getElementById('autoSyncEnabled').checked = hasUrl;
         }
 
         async function getGoogleSheetUrl() {
-            const url = await tpaDB.getSetting('googleSheetUrl');
-            return url || DEFAULT_GOOGLE_SHEET_URL;
+            return await tpaDB.getSetting('googleSheetUrl') || '';
         }
 
         async function isAutoSyncEnabled() {
-            const setting = await tpaDB.getSetting('autoSyncEnabled');
-            return setting !== false;
+            const url = await getGoogleSheetUrl();
+            return url.trim().length > 0;
         }
 
         async function exportData() {
