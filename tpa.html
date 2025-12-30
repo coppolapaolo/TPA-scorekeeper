@@ -477,11 +477,21 @@
             </button>
         </div>
 
-        <!-- Player selector -->
-        <div class="mb-3">
-            <select id="statsPlayerSelect" class="form-select" onchange="loadPlayerStats()">
-                <option value="">Select Player</option>
-            </select>
+        <!-- Filters -->
+        <div class="row mb-3">
+            <div class="col-7">
+                <select id="statsPlayerSelect" class="form-select" onchange="loadPlayerStats()">
+                    <option value="">Select Player</option>
+                </select>
+            </div>
+            <div class="col-5">
+                <select id="statsGameFilter" class="form-select" onchange="loadPlayerStats()">
+                    <option value="">All Games</option>
+                    <option value="8">8-ball</option>
+                    <option value="9">9-ball</option>
+                    <option value="10">10-ball</option>
+                </select>
+            </div>
         </div>
 
         <!-- Stats content -->
@@ -1765,6 +1775,7 @@
 
         async function loadPlayerStats() {
             const playerName = document.getElementById('statsPlayerSelect').value;
+            const gameFilter = document.getElementById('statsGameFilter').value;
 
             if (!playerName) {
                 document.getElementById('statsContent').style.display = 'none';
@@ -1775,7 +1786,7 @@
             document.getElementById('statsContent').style.display = 'block';
             document.getElementById('statsEmpty').style.display = 'none';
 
-            const stats = await calculatePlayerStats(playerName);
+            const stats = await calculatePlayerStats(playerName, gameFilter);
 
             document.getElementById('statsTpaAvg').textContent = stats.avgTpa;
             document.getElementById('statsWinRate').textContent = stats.winRate + '%';
@@ -1786,8 +1797,8 @@
             updateHeadToHead(stats.opponents);
         }
 
-        async function calculatePlayerStats(playerName) {
-            const matches = await tpaDB.getAllMatches({ player: playerName });
+        async function calculatePlayerStats(playerName, gameType) {
+            const matches = await tpaDB.getAllMatches({ player: playerName, gameType: gameType });
             const normalizedName = playerName.toLowerCase().trim();
 
             const stats = {
