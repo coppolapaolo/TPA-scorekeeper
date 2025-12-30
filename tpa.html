@@ -5,6 +5,7 @@
     <title>Player Match</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
@@ -136,6 +137,54 @@
             opacity: 0.4;
         }
 
+        /* History list items */
+        .match-card {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .match-card:hover {
+            background-color: #f8f9fa;
+        }
+        .match-card .match-date {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+        .match-card .match-score {
+            font-weight: bold;
+        }
+        .match-card .match-tpa {
+            font-size: 0.9em;
+        }
+        .winner {
+            color: #198754;
+            font-weight: bold;
+        }
+        .loser {
+            color: #6c757d;
+        }
+
+        /* Stats cards */
+        .stats-overview h4 {
+            margin-bottom: 0;
+        }
+        .stats-overview small {
+            color: #6c757d;
+        }
+
+        /* Nav buttons on player form */
+        .d-flex.gap-2 .btn {
+            height: auto;
+            padding: 8px 16px;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
     </style>
     <meta charset="utf-8">
 </head>
@@ -161,6 +210,17 @@
             <label class="btn btn-outline-primary btn-match-type" for="gameType3">10 ball</label>
         </div>
         <button type="button" class="btn btn-primary col-5" style="margin: .5em;" onclick="startMatch()">Start</button>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+            <button type="button" class="btn btn-outline-secondary" style="min-width: 100px;" onclick="showHistoryView()">
+                <i class="bi bi-clock-history"></i> History
+            </button>
+            <button type="button" class="btn btn-outline-secondary" style="min-width: 100px;" onclick="showStatsView()">
+                <i class="bi bi-graph-up"></i> Stats
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="showSettingsView()">
+                <i class="bi bi-gear"></i>
+            </button>
+        </div>
     </form>
 
     <h3 id="dateTitle" class="text-center mb-3" style="display: none;">DATA</h3>
@@ -314,6 +374,226 @@
     <div id="results" class="container justify-content-center mb-5 flex-column" style="display: none;">
     </div>
 
+    <!-- History View -->
+    <div id="historyView" class="container" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="bi bi-clock-history"></i> Match History</h3>
+            <button class="btn btn-outline-secondary" onclick="showPlayerForm()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-3">
+            <div class="col-6">
+                <select id="historyFilterPlayer" class="form-select" onchange="loadMatchHistory()">
+                    <option value="">All Players</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <select id="historyFilterGame" class="form-select" onchange="loadMatchHistory()">
+                    <option value="">All Games</option>
+                    <option value="8">8-ball</option>
+                    <option value="9">9-ball</option>
+                    <option value="10">10-ball</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Match List -->
+        <div id="historyList" class="list-group">
+            <div class="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav id="historyPagination" class="mt-3" style="display: none;">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" id="prevPageItem">
+                    <a class="page-link" href="#" onclick="loadMatchHistory(currentHistoryPage - 1); return false;">Previous</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link" id="pageInfo">Page 1</span>
+                </li>
+                <li class="page-item" id="nextPageItem">
+                    <a class="page-link" href="#" onclick="loadMatchHistory(currentHistoryPage + 1); return false;">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Match Detail View -->
+    <div id="matchDetailView" class="container" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 id="matchDetailTitle">Match Details</h3>
+            <div>
+                <button class="btn btn-outline-danger btn-sm me-2" onclick="deleteCurrentMatch()">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                <button class="btn btn-outline-secondary" onclick="showHistoryView()">
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+            </div>
+        </div>
+
+        <!-- Match summary card -->
+        <div id="matchSummaryCard" class="card mb-3">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-5">
+                        <h5 id="detailPlayer1Name">Player 1</h5>
+                        <h2 id="detailPlayer1Racks" class="mb-0">0</h2>
+                        <small id="detailPlayer1TPA">TPA: ---</small>
+                    </div>
+                    <div class="col-2 d-flex align-items-center justify-content-center">
+                        <span class="fs-4">vs</span>
+                    </div>
+                    <div class="col-5">
+                        <h5 id="detailPlayer2Name">Player 2</h5>
+                        <h2 id="detailPlayer2Racks" class="mb-0">0</h2>
+                        <small id="detailPlayer2TPA">TPA: ---</small>
+                    </div>
+                </div>
+                <div class="text-center mt-2">
+                    <small id="detailMatchDate" class="text-muted"></small>
+                    <span id="detailGameType" class="badge bg-secondary ms-2"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Annotation table -->
+        <div id="matchDetailTable"></div>
+    </div>
+
+    <!-- Stats View -->
+    <div id="statsView" class="container" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="bi bi-graph-up"></i> Statistics</h3>
+            <button class="btn btn-outline-secondary" onclick="showPlayerForm()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+        </div>
+
+        <!-- Player selector -->
+        <div class="mb-3">
+            <select id="statsPlayerSelect" class="form-select" onchange="loadPlayerStats()">
+                <option value="">Select Player</option>
+            </select>
+        </div>
+
+        <!-- Stats content -->
+        <div id="statsContent" style="display: none;">
+            <!-- Overview card -->
+            <div class="card mb-3">
+                <div class="card-header">Overview</div>
+                <div class="card-body stats-overview">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 id="statsTpaAvg">---</h4>
+                            <small>Avg TPA</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 id="statsWinRate">---</h4>
+                            <small>Win Rate</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 id="statsMatches">---</h4>
+                            <small>Matches</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TPA Trend Chart -->
+            <div class="card mb-3">
+                <div class="card-header">TPA Trend</div>
+                <div class="card-body">
+                    <canvas id="tpaTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Error Breakdown Chart -->
+            <div class="card mb-3">
+                <div class="card-header">Error Breakdown</div>
+                <div class="card-body">
+                    <canvas id="errorBreakdownChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Head-to-Head Records -->
+            <div class="card mb-3">
+                <div class="card-header">Head-to-Head</div>
+                <div class="card-body">
+                    <div id="headToHeadList" class="list-group list-group-flush"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="statsEmpty" class="text-center text-muted py-4">
+            Select a player to view statistics
+        </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settingsView" class="container" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="bi bi-gear"></i> Settings</h3>
+            <button class="btn btn-outline-secondary" onclick="showPlayerForm()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+        </div>
+
+        <!-- Data Management -->
+        <div class="card mb-3">
+            <div class="card-header">Data Management</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    <span id="matchCount">0</span> matches saved locally
+                </p>
+                <button class="btn btn-primary mb-2 w-100" onclick="exportData()">
+                    <i class="bi bi-download"></i> Export All Data (JSON)
+                </button>
+                <div class="mb-2">
+                    <input type="file" id="importFile" accept=".json" class="form-control">
+                </div>
+                <button class="btn btn-warning w-100" onclick="importData()">
+                    <i class="bi bi-upload"></i> Import Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Google Sheets Sync -->
+        <div class="card mb-3">
+            <div class="card-header">Google Sheets Sync</div>
+            <div class="card-body">
+                <div class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input" id="autoSyncEnabled" checked onchange="saveSettings()">
+                    <label class="form-check-label" for="autoSyncEnabled">
+                        Auto-sync completed matches to Google Sheets
+                    </label>
+                </div>
+                <input type="text" class="form-control mb-2" id="googleSheetUrl"
+                       placeholder="Google Apps Script URL" onchange="saveSettings()">
+                <button class="btn btn-outline-primary w-100" onclick="syncPendingMatches()">
+                    <i class="bi bi-cloud-upload"></i> Sync Pending Matches (<span id="pendingCount">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">Danger Zone</div>
+            <div class="card-body">
+                <button class="btn btn-outline-danger w-100" onclick="clearAllData()">
+                    <i class="bi bi-trash"></i> Clear All Local Data
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function getCookie(cname) {
             var name = cname + "=";
@@ -331,7 +611,16 @@
             return "";
         }
 
-        window.onload = function () {
+        window.onload = async function () {
+            // Initialize IndexedDB
+            tpaDB = new TPADatabase();
+            try {
+                await tpaDB.init();
+                console.log('IndexedDB initialized successfully');
+            } catch (e) {
+                console.error('Failed to initialize IndexedDB:', e);
+            }
+
             var player1 = getCookie('player1');
             if (player1 != "") {
                 document.getElementById('player1').value = player1;
@@ -1044,6 +1333,784 @@
                 document.getElementById('kicks').innerHTML += kickSequence(turn.tpaAnnotation.kickSequence);
             }
         }
+
+        // ==========================================
+        // IndexedDB Database Manager
+        // ==========================================
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0;
+                var v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        class TPADatabase {
+            constructor() {
+                this.db = null;
+                this.dbName = 'TPAScorekeeper';
+                this.dbVersion = 1;
+            }
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+
+                        if (!db.objectStoreNames.contains('matches')) {
+                            const matchStore = db.createObjectStore('matches', { keyPath: 'id' });
+                            matchStore.createIndex('date', 'date', { unique: false });
+                            matchStore.createIndex('gameType', 'gameType', { unique: false });
+                            matchStore.createIndex('syncedToCloud', 'syncedToCloud', { unique: false });
+                        }
+
+                        if (!db.objectStoreNames.contains('settings')) {
+                            db.createObjectStore('settings', { keyPath: 'key' });
+                        }
+                    };
+                });
+            }
+
+            async saveMatch(matchRecord) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['matches'], 'readwrite');
+                    const store = transaction.objectStore('matches');
+                    const request = store.put(matchRecord);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async getMatch(id) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['matches'], 'readonly');
+                    const store = transaction.objectStore('matches');
+                    const request = store.get(id);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async getAllMatches(options = {}) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['matches'], 'readonly');
+                    const store = transaction.objectStore('matches');
+                    const request = store.getAll();
+
+                    request.onsuccess = () => {
+                        let matches = request.result || [];
+
+                        if (options.player) {
+                            const playerLower = options.player.toLowerCase();
+                            matches = matches.filter(m =>
+                                m.players[0].name.toLowerCase().includes(playerLower) ||
+                                m.players[1].name.toLowerCase().includes(playerLower)
+                            );
+                        }
+
+                        if (options.gameType) {
+                            matches = matches.filter(m => m.gameType === parseInt(options.gameType));
+                        }
+
+                        matches.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        resolve(matches);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async deleteMatch(id) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['matches'], 'readwrite');
+                    const store = transaction.objectStore('matches');
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async getMatchCount() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['matches'], 'readonly');
+                    const store = transaction.objectStore('matches');
+                    const request = store.count();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async getPendingMatches() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['matches'], 'readonly');
+                    const store = transaction.objectStore('matches');
+                    const index = store.index('syncedToCloud');
+                    const request = index.getAll(false);
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async markAsSynced(id) {
+                const match = await this.getMatch(id);
+                if (match) {
+                    match.syncedToCloud = true;
+                    match.updatedAt = Date.now();
+                    await this.saveMatch(match);
+                }
+            }
+
+            async getAllPlayers() {
+                const matches = await this.getAllMatches();
+                const players = new Set();
+                matches.forEach(m => {
+                    players.add(m.players[0].name);
+                    players.add(m.players[1].name);
+                });
+                return Array.from(players).sort();
+            }
+
+            async getSetting(key) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['settings'], 'readonly');
+                    const store = transaction.objectStore('settings');
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result?.value);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async setSetting(key, value) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['settings'], 'readwrite');
+                    const store = transaction.objectStore('settings');
+                    const request = store.put({ key, value });
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async exportAllData() {
+                const matches = await this.getAllMatches();
+                const settings = await this.getAllSettings();
+                return { matches, settings, exportDate: new Date().toISOString(), version: 1 };
+            }
+
+            async getAllSettings() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['settings'], 'readonly');
+                    const store = transaction.objectStore('settings');
+                    const request = store.getAll();
+                    request.onsuccess = () => {
+                        const settings = {};
+                        (request.result || []).forEach(s => settings[s.key] = s.value);
+                        resolve(settings);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async importData(data) {
+                const imported = { matches: 0, skipped: 0 };
+
+                if (data.matches && Array.isArray(data.matches)) {
+                    for (const matchRecord of data.matches) {
+                        try {
+                            const existing = await this.getMatch(matchRecord.id);
+                            if (!existing) {
+                                await this.saveMatch(matchRecord);
+                                imported.matches++;
+                            } else {
+                                imported.skipped++;
+                            }
+                        } catch (e) {
+                            console.error('Error importing match:', e);
+                        }
+                    }
+                }
+
+                if (data.settings) {
+                    for (const [key, value] of Object.entries(data.settings)) {
+                        await this.setSetting(key, value);
+                    }
+                }
+
+                return imported;
+            }
+
+            async clearAll() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['matches', 'settings'], 'readwrite');
+                    transaction.objectStore('matches').clear();
+                    transaction.objectStore('settings').clear();
+                    transaction.oncomplete = () => resolve();
+                    transaction.onerror = () => reject(transaction.error);
+                });
+            }
+        }
+
+        let tpaDB = null;
+
+        // ==========================================
+        // View Navigation
+        // ==========================================
+
+        const VIEWS = ['playerForm', 'main', 'results', 'historyView', 'matchDetailView', 'statsView', 'settingsView'];
+
+        function showView(viewId) {
+            VIEWS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = id === viewId ? 'block' : 'none';
+                }
+            });
+            if (viewId !== 'main') {
+                document.getElementById('dateTitle').style.display = 'none';
+                document.getElementById('endMatch').classList.remove('d-flex');
+            }
+        }
+
+        function showPlayerForm() {
+            showView('playerForm');
+            document.getElementById('playerForm').classList.add('d-flex');
+        }
+
+        async function showHistoryView() {
+            showView('historyView');
+            await populatePlayerFilter();
+            await loadMatchHistory();
+        }
+
+        function showMatchDetail(matchId) {
+            currentViewingMatchId = matchId;
+            showView('matchDetailView');
+            loadMatchDetail(matchId);
+        }
+
+        async function showStatsView() {
+            showView('statsView');
+            await populateStatsPlayerSelect();
+            document.getElementById('statsContent').style.display = 'none';
+            document.getElementById('statsEmpty').style.display = 'block';
+        }
+
+        async function showSettingsView() {
+            showView('settingsView');
+            await loadSettings();
+        }
+
+        // ==========================================
+        // History View Functions
+        // ==========================================
+
+        let currentHistoryPage = 1;
+        const MATCHES_PER_PAGE = 10;
+        let currentViewingMatchId = null;
+
+        async function populatePlayerFilter() {
+            const players = await tpaDB.getAllPlayers();
+            const select = document.getElementById('historyFilterPlayer');
+            select.textContent = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = 'All Players';
+            select.appendChild(defaultOpt);
+            players.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p;
+                option.textContent = p;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadMatchHistory(page = 1) {
+            currentHistoryPage = page;
+            const playerFilter = document.getElementById('historyFilterPlayer').value;
+            const gameFilter = document.getElementById('historyFilterGame').value;
+
+            const allMatches = await tpaDB.getAllMatches({
+                player: playerFilter,
+                gameType: gameFilter
+            });
+
+            const totalPages = Math.ceil(allMatches.length / MATCHES_PER_PAGE);
+            const startIndex = (page - 1) * MATCHES_PER_PAGE;
+            const matches = allMatches.slice(startIndex, startIndex + MATCHES_PER_PAGE);
+
+            const listEl = document.getElementById('historyList');
+            listEl.textContent = '';
+
+            if (matches.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'text-center text-muted py-4';
+                emptyDiv.textContent = 'No matches found';
+                listEl.appendChild(emptyDiv);
+                document.getElementById('historyPagination').style.display = 'none';
+                return;
+            }
+
+            matches.forEach(m => {
+                const p1Won = m.finalScore.player1.racksWon > m.finalScore.player2.racksWon;
+                const card = document.createElement('a');
+                card.href = '#';
+                card.className = 'list-group-item list-group-item-action match-card';
+                card.onclick = function(e) { e.preventDefault(); showMatchDetail(m.id); };
+
+                const topRow = document.createElement('div');
+                topRow.className = 'd-flex justify-content-between align-items-center';
+
+                const playersDiv = document.createElement('div');
+                const p1Span = document.createElement('span');
+                p1Span.className = p1Won ? 'winner' : 'loser';
+                p1Span.textContent = m.players[0].name;
+                const scoreSpan = document.createElement('span');
+                scoreSpan.className = 'match-score';
+                scoreSpan.textContent = ' ' + m.finalScore.player1.racksWon + ' - ' + m.finalScore.player2.racksWon + ' ';
+                const p2Span = document.createElement('span');
+                p2Span.className = p1Won ? 'loser' : 'winner';
+                p2Span.textContent = m.players[1].name;
+                playersDiv.appendChild(p1Span);
+                playersDiv.appendChild(scoreSpan);
+                playersDiv.appendChild(p2Span);
+
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary';
+                badge.textContent = m.gameType + '-ball';
+
+                topRow.appendChild(playersDiv);
+                topRow.appendChild(badge);
+
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'match-date';
+                dateDiv.textContent = m.date;
+
+                const tpaDiv = document.createElement('div');
+                tpaDiv.className = 'match-tpa';
+                tpaDiv.textContent = 'TPA: ' + m.finalScore.player1.tpaScore + ' / ' + m.finalScore.player2.tpaScore;
+
+                card.appendChild(topRow);
+                card.appendChild(dateDiv);
+                card.appendChild(tpaDiv);
+                listEl.appendChild(card);
+            });
+
+            const paginationEl = document.getElementById('historyPagination');
+            if (totalPages > 1) {
+                paginationEl.style.display = 'block';
+                document.getElementById('pageInfo').textContent = 'Page ' + page + ' of ' + totalPages;
+                document.getElementById('prevPageItem').classList.toggle('disabled', page <= 1);
+                document.getElementById('nextPageItem').classList.toggle('disabled', page >= totalPages);
+            } else {
+                paginationEl.style.display = 'none';
+            }
+        }
+
+        // ==========================================
+        // Match Detail Functions
+        // ==========================================
+
+        async function loadMatchDetail(matchId) {
+            const matchRecord = await tpaDB.getMatch(matchId);
+            if (!matchRecord) {
+                alert('Match not found');
+                showHistoryView();
+                return;
+            }
+
+            document.getElementById('detailPlayer1Name').textContent = matchRecord.players[0].name;
+            document.getElementById('detailPlayer2Name').textContent = matchRecord.players[1].name;
+            document.getElementById('detailPlayer1Racks').textContent = matchRecord.finalScore.player1.racksWon;
+            document.getElementById('detailPlayer2Racks').textContent = matchRecord.finalScore.player2.racksWon;
+            document.getElementById('detailPlayer1TPA').textContent = 'TPA: ' + matchRecord.finalScore.player1.tpaScore;
+            document.getElementById('detailPlayer2TPA').textContent = 'TPA: ' + matchRecord.finalScore.player2.tpaScore;
+            document.getElementById('detailMatchDate').textContent = matchRecord.date;
+            document.getElementById('detailGameType').textContent = matchRecord.gameType + '-ball';
+
+            const p1Won = matchRecord.finalScore.player1.racksWon > matchRecord.finalScore.player2.racksWon;
+            document.getElementById('detailPlayer1Name').className = p1Won ? 'winner' : '';
+            document.getElementById('detailPlayer2Name').className = p1Won ? '' : 'winner';
+
+            // htmlTable is trusted content generated by the app itself
+            const tableContainer = document.getElementById('matchDetailTable');
+            tableContainer.textContent = '';
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = matchRecord.htmlTable;
+            tableContainer.appendChild(wrapper);
+        }
+
+        async function deleteCurrentMatch() {
+            if (!currentViewingMatchId) return;
+
+            if (!confirm('Are you sure you want to delete this match? This cannot be undone.')) {
+                return;
+            }
+
+            await tpaDB.deleteMatch(currentViewingMatchId);
+            currentViewingMatchId = null;
+            showHistoryView();
+        }
+
+        // ==========================================
+        // Statistics Functions
+        // ==========================================
+
+        let tpaTrendChart = null;
+        let errorBreakdownChart = null;
+
+        async function populateStatsPlayerSelect() {
+            const players = await tpaDB.getAllPlayers();
+            const select = document.getElementById('statsPlayerSelect');
+            select.textContent = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = 'Select Player';
+            select.appendChild(defaultOpt);
+            players.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p;
+                option.textContent = p;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadPlayerStats() {
+            const playerName = document.getElementById('statsPlayerSelect').value;
+
+            if (!playerName) {
+                document.getElementById('statsContent').style.display = 'none';
+                document.getElementById('statsEmpty').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('statsContent').style.display = 'block';
+            document.getElementById('statsEmpty').style.display = 'none';
+
+            const stats = await calculatePlayerStats(playerName);
+
+            document.getElementById('statsTpaAvg').textContent = stats.avgTpa;
+            document.getElementById('statsWinRate').textContent = stats.winRate + '%';
+            document.getElementById('statsMatches').textContent = stats.totalMatches;
+
+            updateTpaTrendChart(stats.history);
+            updateErrorBreakdownChart(stats);
+            updateHeadToHead(stats.opponents);
+        }
+
+        async function calculatePlayerStats(playerName) {
+            const matches = await tpaDB.getAllMatches({ player: playerName });
+            const normalizedName = playerName.toLowerCase().trim();
+
+            const stats = {
+                totalMatches: 0,
+                wins: 0,
+                totalTpa: 0,
+                totalMissErrors: 0,
+                totalBreakErrors: 0,
+                totalKickErrors: 0,
+                totalSafetyErrors: 0,
+                totalPositionErrors: 0,
+                opponents: {},
+                history: []
+            };
+
+            matches.forEach(m => {
+                const isPlayer1 = m.players[0].name.toLowerCase().trim() === normalizedName;
+                const playerScore = isPlayer1 ? m.finalScore.player1 : m.finalScore.player2;
+                const opponentScore = isPlayer1 ? m.finalScore.player2 : m.finalScore.player1;
+                const opponentName = isPlayer1 ? m.players[1].name : m.players[0].name;
+
+                stats.totalMatches++;
+                stats.totalTpa += playerScore.tpaScore;
+                stats.totalMissErrors += playerScore.missErrors;
+                stats.totalBreakErrors += playerScore.breakErrors;
+                stats.totalKickErrors += playerScore.kickErrors;
+                stats.totalSafetyErrors += playerScore.safetyErrors;
+                stats.totalPositionErrors += playerScore.positionError;
+
+                const won = playerScore.racksWon > opponentScore.racksWon;
+                if (won) stats.wins++;
+
+                const oppKey = opponentName.toLowerCase().trim();
+                if (!stats.opponents[oppKey]) {
+                    stats.opponents[oppKey] = {
+                        displayName: opponentName,
+                        matches: 0,
+                        wins: 0,
+                        losses: 0
+                    };
+                }
+                stats.opponents[oppKey].matches++;
+                if (won) {
+                    stats.opponents[oppKey].wins++;
+                } else {
+                    stats.opponents[oppKey].losses++;
+                }
+
+                stats.history.push({
+                    date: m.date,
+                    tpaScore: playerScore.tpaScore,
+                    won: won
+                });
+            });
+
+            stats.history.sort((a, b) => new Date(a.date) - new Date(b.date));
+            stats.avgTpa = stats.totalMatches > 0 ? Math.round(stats.totalTpa / stats.totalMatches) : 0;
+            stats.winRate = stats.totalMatches > 0 ? Math.round(stats.wins / stats.totalMatches * 100) : 0;
+
+            return stats;
+        }
+
+        function updateTpaTrendChart(history) {
+            const ctx = document.getElementById('tpaTrendChart').getContext('2d');
+
+            if (tpaTrendChart) {
+                tpaTrendChart.destroy();
+            }
+
+            const labels = history.map(h => h.date.split(' ')[0]);
+            const data = history.map(h => h.tpaScore);
+
+            tpaTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'TPA Score',
+                        data: data,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { min: 0, max: 1000 }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function updateErrorBreakdownChart(stats) {
+            const ctx = document.getElementById('errorBreakdownChart').getContext('2d');
+
+            if (errorBreakdownChart) {
+                errorBreakdownChart.destroy();
+            }
+
+            errorBreakdownChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Miss', 'Break', 'Kick', 'Safety', 'Position'],
+                    datasets: [{
+                        data: [
+                            stats.totalMissErrors,
+                            stats.totalBreakErrors,
+                            stats.totalKickErrors,
+                            stats.totalSafetyErrors,
+                            stats.totalPositionErrors
+                        ],
+                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#6f42c1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function updateHeadToHead(opponents) {
+            const listEl = document.getElementById('headToHeadList');
+            listEl.textContent = '';
+            const opponentEntries = Object.values(opponents).sort((a, b) => b.matches - a.matches);
+
+            if (opponentEntries.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'text-muted';
+                emptyDiv.textContent = 'No opponents found';
+                listEl.appendChild(emptyDiv);
+                return;
+            }
+
+            opponentEntries.forEach(opp => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = opp.displayName;
+
+                const recordSpan = document.createElement('span');
+                recordSpan.className = opp.wins > opp.losses ? 'text-success' : (opp.wins < opp.losses ? 'text-danger' : '');
+                recordSpan.textContent = opp.wins + 'W - ' + opp.losses + 'L (' + opp.matches + ' matches)';
+
+                item.appendChild(nameSpan);
+                item.appendChild(recordSpan);
+                listEl.appendChild(item);
+            });
+        }
+
+        // ==========================================
+        // Settings Functions
+        // ==========================================
+
+        const DEFAULT_GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzn6HJDjup8zqvASM4-cB9zmPcPMi8h-u-iXAXaPDenkr_G9Q2Ap05mrisaWL_Fe8FK4w/exec';
+
+        async function loadSettings() {
+            const matchCount = await tpaDB.getMatchCount();
+            document.getElementById('matchCount').textContent = matchCount;
+
+            const pending = await tpaDB.getPendingMatches();
+            document.getElementById('pendingCount').textContent = pending.length;
+
+            const autoSync = await tpaDB.getSetting('autoSyncEnabled');
+            document.getElementById('autoSyncEnabled').checked = autoSync !== false;
+
+            const url = await tpaDB.getSetting('googleSheetUrl');
+            document.getElementById('googleSheetUrl').value = url || DEFAULT_GOOGLE_SHEET_URL;
+        }
+
+        async function saveSettings() {
+            const autoSync = document.getElementById('autoSyncEnabled').checked;
+            const url = document.getElementById('googleSheetUrl').value;
+            await tpaDB.setSetting('autoSyncEnabled', autoSync);
+            await tpaDB.setSetting('googleSheetUrl', url);
+        }
+
+        async function getGoogleSheetUrl() {
+            const url = await tpaDB.getSetting('googleSheetUrl');
+            return url || DEFAULT_GOOGLE_SHEET_URL;
+        }
+
+        async function isAutoSyncEnabled() {
+            const setting = await tpaDB.getSetting('autoSyncEnabled');
+            return setting !== false;
+        }
+
+        async function exportData() {
+            const data = await tpaDB.exportAllData();
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tpa-matches-' + new Date().toISOString().split('T')[0] + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function importData() {
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file to import');
+                return;
+            }
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                if (!data.matches || !Array.isArray(data.matches)) {
+                    alert('Invalid file format');
+                    return;
+                }
+
+                const result = await tpaDB.importData(data);
+                alert('Imported ' + result.matches + ' matches. ' + result.skipped + ' duplicates skipped.');
+
+                fileInput.value = '';
+                await loadSettings();
+            } catch (e) {
+                alert('Error importing file: ' + e.message);
+            }
+        }
+
+        async function syncPendingMatches() {
+            const pending = await tpaDB.getPendingMatches();
+
+            if (pending.length === 0) {
+                alert('No pending matches to sync');
+                return;
+            }
+
+            const url = await getGoogleSheetUrl();
+            let synced = 0;
+
+            for (const matchRecord of pending) {
+                try {
+                    const matchData = {
+                        date: matchRecord.date,
+                        player1: matchRecord.players[0].name,
+                        player2: matchRecord.players[1].name,
+                        player1Score: matchRecord.finalScore.player1.tpaScore,
+                        player2Score: matchRecord.finalScore.player2.tpaScore,
+                        player1RacksWon: matchRecord.finalScore.player1.racksWon,
+                        player2RacksWon: matchRecord.finalScore.player2.racksWon,
+                        player1BallsPotted: matchRecord.finalScore.player1.ballsPotted,
+                        player2BallsPotted: matchRecord.finalScore.player2.ballsPotted,
+                        player1MissErrors: matchRecord.finalScore.player1.missErrors,
+                        player2MissErrors: matchRecord.finalScore.player2.missErrors,
+                        player1BreakErrors: matchRecord.finalScore.player1.breakErrors,
+                        player2BreakErrors: matchRecord.finalScore.player2.breakErrors,
+                        player1KickErrors: matchRecord.finalScore.player1.kickErrors,
+                        player2KickErrors: matchRecord.finalScore.player2.kickErrors,
+                        player1SafetyErrors: matchRecord.finalScore.player1.safetyErrors,
+                        player2SafetyErrors: matchRecord.finalScore.player2.safetyErrors,
+                        player1PositionError: matchRecord.finalScore.player1.positionError,
+                        player2PositionError: matchRecord.finalScore.player2.positionError,
+                        gameType: matchRecord.gameType,
+                        htmlTable: matchRecord.htmlTable
+                    };
+
+                    await fetch(url, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(matchData)
+                    });
+
+                    await tpaDB.markAsSynced(matchRecord.id);
+                    synced++;
+                } catch (e) {
+                    console.error('Error syncing match:', e);
+                }
+            }
+
+            alert('Synced ' + synced + ' of ' + pending.length + ' matches');
+            await loadSettings();
+        }
+
+        async function clearAllData() {
+            if (!confirm('This will permanently delete ALL local match data. Are you sure?')) {
+                return;
+            }
+            if (!confirm('This action cannot be undone. Click OK to proceed.')) {
+                return;
+            }
+
+            await tpaDB.clearAll();
+            alert('All local data has been cleared');
+            await loadSettings();
+        }
     </script>
 
     <script>
@@ -1056,10 +2123,16 @@
             saveNames(); // Save to cookies for next time
             match = new Match(player1Name, player2Name, document.querySelector('input[name="gameType"]:checked').value);
 
+            // Hide all views first
+            VIEWS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            document.getElementById('playerForm').classList.remove('d-flex');
+
+            // Show match interface
             document.getElementById('dateTitle').style.display = 'block';
             document.getElementById('main').style.display = 'block';
-            document.getElementById('playerForm').style.display = 'none';
-            document.getElementById('playerForm').classList.remove('d-flex');
             
             document.getElementById('dateTitle').textContent = match.startDate;
             document.getElementById('player1Label').textContent = match.players[0].name;
@@ -1085,10 +2158,16 @@
         function resumeMatch(restoredMatch) {
             match = restoredMatch;
 
+            // Hide all views first
+            VIEWS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            document.getElementById('playerForm').classList.remove('d-flex');
+
+            // Show match interface
             document.getElementById('dateTitle').style.display = 'block';
             document.getElementById('main').style.display = 'block';
-            document.getElementById('playerForm').style.display = 'none';
-            document.getElementById('playerForm').classList.remove('d-flex');
 
             document.getElementById('dateTitle').textContent = match.startDate;
             document.getElementById('player1Label').textContent = match.players[0].name;
@@ -1711,45 +2790,90 @@
             document.getElementById('endMatch').classList.remove('d-flex');
             document.getElementById('results').style.display = 'block';
 
-            // save the match in the google sheet
-            // saves date, player1, player2, tpaScore, racksWon, ballsPotted, missErrors, breakErrors, kickErrors, safetyErrors, positionError (for both players), gameType, html table with the annotations
-
-            //scritp url is hard-coded... :( (for now)
-            const googleSheetURL = 'https://script.google.com/macros/s/AKfycbzn6HJDjup8zqvASM4-cB9zmPcPMi8h-u-iXAXaPDenkr_G9Q2Ap05mrisaWL_Fe8FK4w/exec';
-            const matchData = {
+            // Save match to IndexedDB
+            const matchRecord = {
+                id: generateUUID(),
                 date: match.startDate,
-                player1: match.players[0].name,
-                player2: match.players[1].name,
-                player1Score: tpaScore(match.score.player1),
-                player2Score: tpaScore(match.score.player2),
-                player1RacksWon: match.score.player1.racksWon,
-                player2RacksWon: match.score.player2.racksWon,
-                player1BallsPotted: match.score.player1.ballsPotted,
-                player2BallsPotted: match.score.player2.ballsPotted,
-                player1MissErrors: match.score.player1.missErrors,
-                player2MissErrors: match.score.player2.missErrors,
-                player1BreakErrors: match.score.player1.breakErrors,
-                player2BreakErrors: match.score.player2.breakErrors,
-                player1KickErrors: match.score.player1.kickErrors,
-                player2KickErrors: match.score.player2.kickErrors,
-                player1SafetyErrors: match.score.player1.safetyErrors,
-                player2SafetyErrors: match.score.player2.safetyErrors,
-                player1PositionError: match.score.player1.positionError,
-                player2PositionError: match.score.player2.positionError,
-                gameType: match.gameType,
-                htmlTable: results.outerHTML
-            };
-            fetch(googleSheetURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json'
+                gameType: parseInt(match.gameType),
+                players: match.players,
+                finalScore: {
+                    player1: {
+                        racksWon: match.score.player1.racksWon,
+                        ballsPotted: match.score.player1.ballsPotted,
+                        missErrors: match.score.player1.missErrors,
+                        breakErrors: match.score.player1.breakErrors,
+                        kickErrors: match.score.player1.kickErrors,
+                        safetyErrors: match.score.player1.safetyErrors,
+                        positionError: match.score.player1.positionError,
+                        tpaScore: tpaScore(match.score.player1)
+                    },
+                    player2: {
+                        racksWon: match.score.player2.racksWon,
+                        ballsPotted: match.score.player2.ballsPotted,
+                        missErrors: match.score.player2.missErrors,
+                        breakErrors: match.score.player2.breakErrors,
+                        kickErrors: match.score.player2.kickErrors,
+                        safetyErrors: match.score.player2.safetyErrors,
+                        positionError: match.score.player2.positionError,
+                        tpaScore: tpaScore(match.score.player2)
+                    }
                 },
-                body: JSON.stringify(matchData)
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                htmlTable: results.outerHTML,
+                syncedToCloud: false,
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            };
+
+            // Save to IndexedDB
+            tpaDB.saveMatch(matchRecord).then(() => {
+                console.log('Match saved to IndexedDB');
+            }).catch(error => {
+                console.error('Error saving to IndexedDB:', error);
             });
+
+            // Sync to Google Sheets if enabled
+            (async function() {
+                const autoSync = await isAutoSyncEnabled();
+                if (autoSync) {
+                    const googleSheetURL = await getGoogleSheetUrl();
+                    const matchData = {
+                        date: match.startDate,
+                        player1: match.players[0].name,
+                        player2: match.players[1].name,
+                        player1Score: tpaScore(match.score.player1),
+                        player2Score: tpaScore(match.score.player2),
+                        player1RacksWon: match.score.player1.racksWon,
+                        player2RacksWon: match.score.player2.racksWon,
+                        player1BallsPotted: match.score.player1.ballsPotted,
+                        player2BallsPotted: match.score.player2.ballsPotted,
+                        player1MissErrors: match.score.player1.missErrors,
+                        player2MissErrors: match.score.player2.missErrors,
+                        player1BreakErrors: match.score.player1.breakErrors,
+                        player2BreakErrors: match.score.player2.breakErrors,
+                        player1KickErrors: match.score.player1.kickErrors,
+                        player2KickErrors: match.score.player2.kickErrors,
+                        player1SafetyErrors: match.score.player1.safetyErrors,
+                        player2SafetyErrors: match.score.player2.safetyErrors,
+                        player1PositionError: match.score.player1.positionError,
+                        player2PositionError: match.score.player2.positionError,
+                        gameType: match.gameType,
+                        htmlTable: results.outerHTML
+                    };
+
+                    fetch(googleSheetURL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(matchData)
+                    })
+                    .then(() => {
+                        tpaDB.markAsSynced(matchRecord.id);
+                    })
+                    .catch(error => {
+                        console.error('Error syncing to Google Sheets:', error);
+                    });
+                }
+            })();
         }
 
     </script>
