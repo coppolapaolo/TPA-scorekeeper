@@ -342,6 +342,19 @@
                 document.getElementById('player2').value = player2;
             }
 
+            // Check for saved match state
+            const savedMatch = loadMatchState();
+            if (savedMatch) {
+                const resume = confirm('Vuoi riprendere il match in corso?\n\n' +
+                    savedMatch.players[0].name + ' vs ' + savedMatch.players[1].name + '\n' +
+                    'Punteggio: ' + savedMatch.score.player1.racksWon + ' - ' + savedMatch.score.player2.racksWon);
+
+                if (resume) {
+                    resumeMatch(savedMatch);
+                } else {
+                    clearMatchState();
+                }
+            }
         };
 
         function saveNames() {
@@ -350,9 +363,127 @@
             var d = new Date();
             d.setTime(d.getTime() + (60 * 60 * 24 * 60 * 1000)); // Two months
             var expires = "expires=" + d.toUTCString();
-        
+
             document.cookie = "player1=" + player1 + ";" + expires + ";path=/";
             document.cookie = "player2=" + player2 + ";" + expires + ";path=/";
+        }
+
+        function saveMatchState() {
+            if (!match) return;
+
+            // Serialize the match state (excluding methods and circular references)
+            const state = {
+                startDate: match.startDate,
+                players: match.players,
+                score: match.score,
+                currentRack: match.currentRack,
+                currentTurn: match.currentTurn,
+                currentPlayer: match.currentPlayer,
+                gameType: match.gameType,
+                viewingRack: match.viewingRack,
+                viewingTurn: match.viewingTurn,
+                isHistoryMode: match.isHistoryMode,
+                racks: match.racks.map((rack, rackIndex) => {
+                    if (rack === null) return null;
+                    return {
+                        turns: rack.turns.map((turn, turnIndex) => {
+                            if (turn === null) return null;
+                            return {
+                                player: turn.player,
+                                breakTurn: turn.breakTurn,
+                                ballsRemaining: turn.ballsRemaining,
+                                pushed: turn.pushed,
+                                winningTurn: turn.winningTurn,
+                                score: turn.score,
+                                consecutiveErrors: turn.consecutiveErrors,
+                                tpaAnnotation: {
+                                    totalPotted: turn.tpaAnnotation.totalPotted,
+                                    breakPotted: turn.tpaAnnotation.breakPotted,
+                                    missErrors: turn.tpaAnnotation.missErrors,
+                                    kick: turn.tpaAnnotation.kick,
+                                    pocketed: turn.tpaAnnotation.pocketed,
+                                    safety: turn.tpaAnnotation.safety,
+                                    push: turn.tpaAnnotation.push,
+                                    safeX: turn.tpaAnnotation.safeX,
+                                    noHit: turn.tpaAnnotation.noHit,
+                                    kickSequence: turn.tpaAnnotation.kickSequence
+                                }
+                            };
+                        })
+                    };
+                })
+            };
+
+            localStorage.setItem('tpaMatchState', JSON.stringify(state));
+        }
+
+        function loadMatchState() {
+            const saved = localStorage.getItem('tpaMatchState');
+            if (!saved) return null;
+
+            try {
+                const state = JSON.parse(saved);
+
+                // Recreate Match instance
+                const restoredMatch = new Match(state.players[0].name, state.players[1].name, state.gameType);
+                restoredMatch.startDate = state.startDate;
+                restoredMatch.score = state.score;
+                restoredMatch.currentRack = state.currentRack;
+                restoredMatch.currentTurn = state.currentTurn;
+                restoredMatch.currentPlayer = state.currentPlayer;
+                restoredMatch.viewingRack = state.viewingRack;
+                restoredMatch.viewingTurn = state.viewingTurn;
+                restoredMatch.isHistoryMode = state.isHistoryMode;
+
+                // Recreate racks and turns
+                restoredMatch.racks = state.racks.map((rack, rackIndex) => {
+                    if (rack === null) return null;
+                    return {
+                        turns: rack.turns.map((turnData, turnIndex) => {
+                            if (turnData === null) return null;
+
+                            const turn = new Turn(turnData.player, turnData.breakTurn, turnData.ballsRemaining);
+                            turn.pushed = turnData.pushed;
+                            turn.winningTurn = turnData.winningTurn;
+                            turn.score = turnData.score;
+                            turn.consecutiveErrors = turnData.consecutiveErrors;
+
+                            // Restore TPAAnnotation
+                            turn.tpaAnnotation.totalPotted = turnData.tpaAnnotation.totalPotted;
+                            turn.tpaAnnotation.breakPotted = turnData.tpaAnnotation.breakPotted;
+                            turn.tpaAnnotation.missErrors = turnData.tpaAnnotation.missErrors;
+                            turn.tpaAnnotation.kick = turnData.tpaAnnotation.kick;
+                            turn.tpaAnnotation.pocketed = turnData.tpaAnnotation.pocketed;
+                            turn.tpaAnnotation.safety = turnData.tpaAnnotation.safety;
+                            turn.tpaAnnotation.push = turnData.tpaAnnotation.push;
+                            turn.tpaAnnotation.safeX = turnData.tpaAnnotation.safeX;
+                            turn.tpaAnnotation.noHit = turnData.tpaAnnotation.noHit;
+                            turn.tpaAnnotation.kickSequence = turnData.tpaAnnotation.kickSequence.map(k => new KickIn(k.player, k.isFirst));
+
+                            return turn;
+                        })
+                    };
+                });
+
+                // Restore previousTurn references
+                for (let r = 1; r < restoredMatch.racks.length; r++) {
+                    for (let t = 2; t < restoredMatch.racks[r].turns.length; t++) {
+                        if (restoredMatch.racks[r].turns[t]) {
+                            restoredMatch.racks[r].turns[t].previousTurn = restoredMatch.racks[r].turns[t - 1];
+                        }
+                    }
+                }
+
+                return restoredMatch;
+            } catch (e) {
+                console.error('Error loading match state:', e);
+                localStorage.removeItem('tpaMatchState');
+                return null;
+            }
+        }
+
+        function clearMatchState() {
+            localStorage.removeItem('tpaMatchState');
         }
         
         function formatDateTime(date) {
@@ -468,6 +599,7 @@
                 }
                 updateLabels(this.getTurn());
                 updateButtons(this.getTurn());
+                saveMatchState();
 
             }
 
@@ -941,11 +1073,48 @@
                 match.getTurn().tpaAnnotation.kickSequence.push(new KickIn(match.currentPlayer, true));
                 updateLabels(match.getTurn());
                 updateButtons(match.getTurn());
+                saveMatchState();
             });
 
             updateLabels(match.getTurn());
             updateButtons(match.getTurn());
             initSwipeNavigation();
+            saveMatchState();
+        }
+
+        function resumeMatch(restoredMatch) {
+            match = restoredMatch;
+
+            document.getElementById('dateTitle').style.display = 'block';
+            document.getElementById('main').style.display = 'block';
+            document.getElementById('playerForm').style.display = 'none';
+            document.getElementById('playerForm').classList.remove('d-flex');
+
+            document.getElementById('dateTitle').textContent = match.startDate;
+            document.getElementById('player1Label').textContent = match.players[0].name;
+            document.getElementById('player2Label').textContent = match.players[1].name;
+
+            const buttons = document.getElementById('scoreButtons').querySelectorAll('button.btn-square');
+            buttons.forEach(button => button.addEventListener('click', match.annotate.bind(match)));
+            document.getElementById('buttonK-in').addEventListener('click', function() {
+                match.getTurn().tpaAnnotation.kickSequence.push(new KickIn(match.currentPlayer, true));
+                updateLabels(match.getTurn());
+                updateButtons(match.getTurn());
+                saveMatchState();
+            });
+
+            updateLabels(match.getTurn());
+            updateButtons(match.getTurn());
+            const scoreEl = document.getElementById('score');
+            scoreEl.textContent = '';
+            scoreEl.insertAdjacentHTML('beforeend', scoreToString(match.score));
+            initSwipeNavigation();
+            updateHistoryNavButtons();
+
+            // Show endMatch button if current turn is a break (ready for new rack)
+            if (match.getTurn().isBreak() && !match.getTurn().hasBeenPlayed()) {
+                document.getElementById('endMatch').classList.add('d-flex');
+            }
         }
 
         // Swipe navigation
@@ -1188,6 +1357,7 @@
             updateSwitchPlayerStatus();
             document.getElementById('score').textContent = '';
             document.getElementById('score').insertAdjacentHTML('beforeend', scoreToString(match.score));
+            saveMatchState();
         }
 
         function checkForEditChanges() {
@@ -1374,6 +1544,7 @@
                 }
                 // Update history navigation buttons
                 updateHistoryNavButtons();
+                saveMatchState();
             }
         }
 
@@ -1413,6 +1584,7 @@
                 match.getTurn().winningTurn = false;
                 updateLabels(match.getTurn());
                 updateButtons(match.getTurn());
+                saveMatchState();
             }
         });
 
@@ -1448,6 +1620,7 @@
             var confirmation = window.confirm("This will end the match.\nAre you sure?");
           
             if (!confirmation) return;
+            clearMatchState(); // Clear saved state since match is ending
             // Builds an HTML table with all the turns and annotations
             // Hides main and endMatch, shows results
             // Iterates through all the racks and turns and adds them to the table
