@@ -654,7 +654,6 @@
             tpaDB = new TPADatabase();
             try {
                 await tpaDB.init();
-                console.log('IndexedDB initialized successfully');
             } catch (e) {
                 console.error('Failed to initialize IndexedDB:', e);
             }
@@ -2276,7 +2275,6 @@
                 mouseDown = true;
                 dragStartX = e.clientX;
                 dragStartY = e.clientY;
-                console.log('drag start', dragStartX, dragStartY);
             });
 
             document.addEventListener('mousemove', function(e) {
@@ -2289,11 +2287,9 @@
                 if (mouseDown) {
                     const deltaX = e.clientX - dragStartX;
                     const deltaY = e.clientY - dragStartY;
-                    console.log('drag end, delta', deltaX, deltaY);
                     mouseDown = false;
 
                     if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaY) < SWIPE_RESTRAINT) {
-                        console.log('swipe detected!', deltaX < 0 ? 'LEFT' : 'RIGHT');
                         handleSwipeGesture(deltaX, deltaY);
                     }
                 }
@@ -2876,9 +2872,7 @@
             };
 
             // Save to IndexedDB
-            tpaDB.saveMatch(matchRecord).then(() => {
-                console.log('Match saved to IndexedDB');
-            }).catch(error => {
+            tpaDB.saveMatch(matchRecord).catch(error => {
                 console.error('Error saving to IndexedDB:', error);
             });
 
