@@ -479,7 +479,7 @@
         </div>
 
         <!-- Filters -->
-        <div class="row mb-3">
+        <div class="row mb-2">
             <div class="col-7">
                 <select id="statsPlayerSelect" class="form-select" onchange="loadPlayerStats()">
                     <option value="">Select Player</option>
@@ -492,6 +492,29 @@
                     <option value="9">9-ball</option>
                     <option value="10">10-ball</option>
                 </select>
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-7">
+                <select id="statsTimeRange" class="form-select" onchange="onTimeRangeChange()">
+                    <option value="">All time</option>
+                    <option value="1m">Last month</option>
+                    <option value="3m">Last 3 months</option>
+                    <option value="6m">Last 6 months</option>
+                    <option value="1y">Last year</option>
+                    <option value="custom">Custom range</option>
+                </select>
+            </div>
+            <div class="col-5">
+                <input type="number" id="statsMinRacks" class="form-control" placeholder="Min racks" min="0" onchange="loadPlayerStats()">
+            </div>
+        </div>
+        <div id="customDateRange" class="row mb-2" style="display: none;">
+            <div class="col-6">
+                <input type="date" id="statsDateFrom" class="form-control" onchange="loadPlayerStats()">
+            </div>
+            <div class="col-6">
+                <input type="date" id="statsDateTo" class="form-control" onchange="loadPlayerStats()">
             </div>
         </div>
 
@@ -526,11 +549,33 @@
                 </div>
             </div>
 
-            <!-- Error Breakdown Chart -->
+            <!-- Error Trend Chart -->
             <div class="card mb-3">
-                <div class="card-header">Error Breakdown</div>
+                <div class="card-header">Error Trend</div>
                 <div class="card-body">
-                    <canvas id="errorBreakdownChart"></canvas>
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="errorTypeFilters">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="errMiss" value="miss" checked onchange="updateErrorTrendChart()">
+                            <label class="form-check-label" for="errMiss" style="color: #dc3545;">Miss</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="errBreak" value="break" checked onchange="updateErrorTrendChart()">
+                            <label class="form-check-label" for="errBreak" style="color: #fd7e14;">Break</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="errKick" value="kick" checked onchange="updateErrorTrendChart()">
+                            <label class="form-check-label" for="errKick" style="color: #ffc107;">Kick</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="errSafety" value="safety" checked onchange="updateErrorTrendChart()">
+                            <label class="form-check-label" for="errSafety" style="color: #20c997;">Safety</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="errPosition" value="position" checked onchange="updateErrorTrendChart()">
+                            <label class="form-check-label" for="errPosition" style="color: #6f42c1;">Position</label>
+                        </div>
+                    </div>
+                    <canvas id="errorTrendChart"></canvas>
                 </div>
             </div>
 
@@ -1756,7 +1801,8 @@
         // ==========================================
 
         let tpaTrendChart = null;
-        let errorBreakdownChart = null;
+        let errorTrendChart = null;
+        let currentErrorHistory = []; // Store error history for checkbox filtering
 
         async function populateStatsPlayerSelect() {
             const players = await tpaDB.getAllPlayers();
@@ -1774,6 +1820,36 @@
             });
         }
 
+        function onTimeRangeChange() {
+            const timeRange = document.getElementById('statsTimeRange').value;
+            document.getElementById('customDateRange').style.display = timeRange === 'custom' ? 'flex' : 'none';
+            loadPlayerStats();
+        }
+
+        function getDateFilters() {
+            const timeRange = document.getElementById('statsTimeRange').value;
+            const now = new Date();
+            let dateFrom = null;
+            let dateTo = null;
+
+            if (timeRange === '1m') {
+                dateFrom = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+            } else if (timeRange === '3m') {
+                dateFrom = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+            } else if (timeRange === '6m') {
+                dateFrom = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+            } else if (timeRange === '1y') {
+                dateFrom = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+            } else if (timeRange === 'custom') {
+                const fromVal = document.getElementById('statsDateFrom').value;
+                const toVal = document.getElementById('statsDateTo').value;
+                if (fromVal) dateFrom = new Date(fromVal);
+                if (toVal) dateTo = new Date(toVal);
+            }
+
+            return { dateFrom, dateTo };
+        }
+
         async function loadPlayerStats() {
             const playerName = document.getElementById('statsPlayerSelect').value;
             const gameFilter = document.getElementById('statsGameFilter').value;
@@ -1787,20 +1863,39 @@
             document.getElementById('statsContent').style.display = 'block';
             document.getElementById('statsEmpty').style.display = 'none';
 
-            const stats = await calculatePlayerStats(playerName, gameFilter);
+            const { dateFrom, dateTo } = getDateFilters();
+            const minRacks = parseInt(document.getElementById('statsMinRacks').value) || 0;
+
+            const stats = await calculatePlayerStats(playerName, gameFilter, { dateFrom, dateTo, minRacks });
 
             document.getElementById('statsTpaAvg').textContent = stats.avgTpa;
             document.getElementById('statsWinRate').textContent = stats.winRate + '%';
             document.getElementById('statsMatches').textContent = stats.totalMatches;
 
             updateTpaTrendChart(stats.history);
-            updateErrorBreakdownChart(stats);
+            currentErrorHistory = stats.errorHistory;
+            updateErrorTrendChart();
             updateHeadToHead(stats.opponents);
         }
 
-        async function calculatePlayerStats(playerName, gameType) {
-            const matches = await tpaDB.getAllMatches({ player: playerName, gameType: gameType });
+        async function calculatePlayerStats(playerName, gameType, options = {}) {
+            let matches = await tpaDB.getAllMatches({ player: playerName, gameType: gameType });
             const normalizedName = playerName.toLowerCase().trim();
+            const { dateFrom, dateTo, minRacks } = options;
+
+            // Apply date and rack filters
+            matches = matches.filter(m => {
+                const matchDate = new Date(m.date);
+                if (dateFrom && matchDate < dateFrom) return false;
+                if (dateTo && matchDate > dateTo) return false;
+
+                if (minRacks && minRacks > 0) {
+                    const totalRacks = m.finalScore.player1.racksWon + m.finalScore.player2.racksWon;
+                    if (totalRacks < minRacks) return false;
+                }
+
+                return true;
+            });
 
             const stats = {
                 totalMatches: 0,
@@ -1812,7 +1907,8 @@
                 totalSafetyErrors: 0,
                 totalPositionErrors: 0,
                 opponents: {},
-                history: []
+                history: [],
+                errorHistory: []
             };
 
             matches.forEach(m => {
@@ -1853,9 +1949,19 @@
                     tpaScore: playerScore.tpaScore,
                     won: won
                 });
+
+                stats.errorHistory.push({
+                    date: m.date,
+                    miss: playerScore.missErrors,
+                    break: playerScore.breakErrors,
+                    kick: playerScore.kickErrors,
+                    safety: playerScore.safetyErrors,
+                    position: playerScore.positionError
+                });
             });
 
             stats.history.sort((a, b) => new Date(a.date) - new Date(b.date));
+            stats.errorHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
             stats.avgTpa = stats.totalMatches > 0 ? Math.round(stats.totalTpa / stats.totalMatches) : 0;
             stats.winRate = stats.totalMatches > 0 ? Math.round(stats.wins / stats.totalMatches * 100) : 0;
 
@@ -1897,30 +2003,54 @@
             });
         }
 
-        function updateErrorBreakdownChart(stats) {
-            const ctx = document.getElementById('errorBreakdownChart').getContext('2d');
+        function updateErrorTrendChart() {
+            const ctx = document.getElementById('errorTrendChart').getContext('2d');
 
-            if (errorBreakdownChart) {
-                errorBreakdownChart.destroy();
+            if (errorTrendChart) {
+                errorTrendChart.destroy();
             }
 
-            errorBreakdownChart = new Chart(ctx, {
-                type: 'doughnut',
+            if (!currentErrorHistory || currentErrorHistory.length === 0) {
+                errorTrendChart = null;
+                return;
+            }
+
+            const labels = currentErrorHistory.map(h => h.date.split(' ')[0]);
+            const datasets = [];
+
+            const errorTypes = [
+                { key: 'miss', checkId: 'errMiss', label: 'Miss', color: '#dc3545' },
+                { key: 'break', checkId: 'errBreak', label: 'Break', color: '#fd7e14' },
+                { key: 'kick', checkId: 'errKick', label: 'Kick', color: '#ffc107' },
+                { key: 'safety', checkId: 'errSafety', label: 'Safety', color: '#20c997' },
+                { key: 'position', checkId: 'errPosition', label: 'Position', color: '#6f42c1' }
+            ];
+
+            errorTypes.forEach(errType => {
+                const checkbox = document.getElementById(errType.checkId);
+                if (checkbox && checkbox.checked) {
+                    datasets.push({
+                        label: errType.label,
+                        data: currentErrorHistory.map(h => h[errType.key]),
+                        borderColor: errType.color,
+                        backgroundColor: errType.color + '20',
+                        fill: false,
+                        tension: 0.3
+                    });
+                }
+            });
+
+            errorTrendChart = new Chart(ctx, {
+                type: 'line',
                 data: {
-                    labels: ['Miss', 'Break', 'Kick', 'Safety', 'Position'],
-                    datasets: [{
-                        data: [
-                            stats.totalMissErrors,
-                            stats.totalBreakErrors,
-                            stats.totalKickErrors,
-                            stats.totalSafetyErrors,
-                            stats.totalPositionErrors
-                        ],
-                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#6f42c1']
-                    }]
+                    labels: labels,
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
                     plugins: {
                         legend: { position: 'bottom' }
                     }
