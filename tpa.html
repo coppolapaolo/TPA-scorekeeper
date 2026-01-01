@@ -30,21 +30,23 @@
             border: 2px solid black;
             pointer-events: none;
         }
-            .circle-kick {
-            position: relative;
+        .circle-kick {
+            display: inline-flex;
             justify-content: center;
             align-items: center;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            border: 2px solid black;
-            padding: 1px;
+            border: 1px solid #555;
+            font-size: 0.8em;
+            color: #555;
         }
 
-        .circle-kick .fs-6 {
+        .circle-kick label {
             margin: 0;
-        }
-
-        .circle label, .circle-kick label {
-            margin: 0;
+            padding: 0;
+            line-height: 1;
+            color: #555;
         }
 
         .white-label, .gray-label {
@@ -77,7 +79,7 @@
         .btn-square {
             width: 50px;
             height: 50px;
-            margin: 0.3em;
+            margin: 0.15em;
         }
         table, td, th, tr {
             border: 2px solid black;
@@ -112,6 +114,25 @@
             border-color: #ff9800 !important;
             color: white !important;
         }
+        .history-mode .player-name-box {
+            border-color: #ff9800 !important;
+            color: #ff9800 !important;
+        }
+        .history-mode .player-name-box.active {
+            background-color: #ff9800 !important;
+            border-color: #ff9800 !important;
+            color: white !important;
+        }
+        .history-mode .gray-label-new {
+            border-color: #ff9800 !important;
+        }
+        .history-mode .annotation-cell {
+            border: none !important;
+        }
+        .history-mode .annotation-cell.winning {
+            border: 2px solid #ff9800 !important;
+            border-radius: 50% !important;
+        }
         .history-indicator {
             background-color: #ff9800;
             color: white;
@@ -133,6 +154,7 @@
         #historyNav button {
             font-size: 14px;
             padding: 8px;
+            color: white;
         }
         #historyNav button:disabled {
             opacity: 0.4;
@@ -186,6 +208,175 @@
             padding: 2rem;
         }
 
+        /* Foul indicator */
+        .foul-indicator {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 0.6em;
+            color: #dc3545;
+            font-weight: bold;
+        }
+        #player1Label, #player2Label {
+            position: relative;
+        }
+
+        /* Score display */
+        .score-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .score-racks {
+            font-size: 1em;
+        }
+        .score-tpa {
+            font-size: 1.1em;
+            color: #555;
+        }
+        .tpa-value {
+            font-weight: bold;
+            font-size: 1.4em;
+            color: #0d6efd;
+        }
+        .score-stats {
+            font-size: 0.8em;
+            color: #888;
+        }
+        .score-achievements {
+            font-size: 0.75em;
+            color: #28a745;
+            margin-top: 2px;
+        }
+
+        /* New player section layout */
+        .player-section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            background: #fafafa;
+            display: inline-block;
+        }
+        .player-name-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+        }
+        .player-name-column .tpa-display {
+            text-align: center;
+            margin-top: 4px;
+        }
+        .player-name-column .be-display {
+            text-align: center;
+            width: auto;
+        }
+        .player-name-box {
+            width: 100px;
+            min-width: 100px;
+            max-width: 100px;
+            height: 80px;
+            font-size: 1em;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .player-name-box.active {
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+        .player-name-box.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .player-stats-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .stat-cell {
+            width: 60px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            background: transparent;
+        }
+        .stat-runouts {
+            color: #dc3545;
+        }
+        .annotation-cell {
+            width: 80px;
+            min-width: 80px;
+            max-width: 80px;
+            height: 80px;
+            min-height: 80px;
+            max-height: 80px;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .white-label-new {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .gray-label-new {
+            width: 40px;
+            min-width: 40px;
+            max-width: 40px;
+            height: 80px;
+            min-height: 80px;
+            max-height: 80px;
+            border: 1px solid #333;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #d0d0d0;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .annotation-cell.winning {
+            border: 2px solid #333 !important;
+            border-radius: 50%;
+        }
+        .tpa-display {
+            font-size: 1.1em;
+            color: #333;
+        }
+        .tpa-display strong {
+            color: #0d6efd;
+            font-size: 1.2em;
+        }
+        .kicks-row {
+            min-height: 24px;
+            width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 2px;
+            font-size: 0.85em;
+            color: #555;
+        }
+        .be-display {
+            font-size: 0.85em;
+            color: #555;
+            margin-top: 2px;
+            width: 120px;
+            text-align: center;
+        }
+
     </style>
     <meta charset="utf-8">
 </head>
@@ -224,139 +415,157 @@
         </div>
     </form>
 
-    <h3 id="dateTitle" class="text-center mb-3" style="display: none;">DATA</h3>
+    <p id="dateTitle" class="text-center text-muted mb-0" style="display: none; font-size: 0.9em;">DATA</p>
+    <p id="gameTypeTitle" class="text-center text-muted mb-3" style="display: none; font-size: 0.85em;"></p>
 
     <div id="historyIndicator" class="history-indicator">
         Rack <span id="historyRack">1</span>, Turno <span id="historyTurn">1</span>
     </div>
 
     <div id="main" class="container text-center" style="display: none;">
-        <div class="row  align-items-center">
-            <div id="kicks" class="col-5 offset-6 mb-1">
-                <span class="circle-kick">
-                    <label class="fs-6 col-1">1</label>
-                </span>
-                <label class="fs-6 col-1">1</label>
-                <span class="circle-kick">
-                    <label class="fs-6 col-1">2</label>
-                </span>
-                <label class="fs-6 col-1">2</label>
-                <label class="fs-6 col-1">2</label>
-            </div>
-            <div id="playersGroup" class="col-5 btn-group-vertical offset-1" role="group">
-                <input type="radio" class="btn-check" name="playerOption" id="player1Option" autocomplete="off" checked>
-                <label id="player1Label" class="btn btn-outline-primary mb-3" for="player1Option">Player1</label>
+        <!-- Hidden kicks div for compatibility -->
+        <div id="kicks" style="display: none;"></div>
 
-                <input type="radio" class="btn-check" name="playerOption" id="player2Option" autocomplete="off">
-                <label id="player2Label" class="btn btn-outline-primary" for="player2Option">Player2</label>
-            </div>
-            <div id="divPlayers" class="col-6 align-content-center">
-                <div id="divPlayerLabel1" class="row mb-3 justify-content-start align-items-center">
-                    <div id="divWhiteLabel1" class="d-flex col-5 offset-1 justify-content-end">
-                        <span id="circle1" class="circle">
-                            <label id="whiteLabel1" class="white-label"><sup>3</sup>5M</label>
-                        </span>
-                    </div>
-                    <div id="divGrayLabel1" class="col-3 justify-content-start">
-                        <label id="grayLabel1" class="border gray-label">P</label>
-                    </div>
-                </div>
-
-                <div id="divPlayerLabel2" class="row align-items-center">
-                    <div id="divWhiteLabel2" class="d-flex col-5 offset-1 justify-content-end">
-                        <span id="circle2" class="circle">
-                            <label id="whiteLabel2" class="white-label"><sup>3</sup>5M</label>
-                        </span>
-                    </div>
-                    <div id="divGrayLabel2" class="col-3">
-                        <label id="grayLabel2" class="border gray-label">P</label>
-                    </div>
-                </div>
-            </div>
-            <div id="score" class="col-9 offset-1"><small>(0,0,NaN) <strong>0 - 0</strong> (0,0,NaN)</small></div>
+        <!-- Hidden playersGroup for compatibility -->
+        <div id="playersGroup" style="display: none;">
+            <input type="radio" class="btn-check" name="playerOption" id="player1Option" autocomplete="off" checked>
+            <input type="radio" class="btn-check" name="playerOption" id="player2Option" autocomplete="off">
         </div>
+
+        <!-- Player 1 Section -->
+        <div class="player-section mb-3" id="player1Section">
+            <div class="d-flex align-items-stretch">
+                <div class="player-name-column">
+                    <label id="player1Label" class="player-name-box btn btn-outline-primary" for="player1Option" onclick="selectPlayer(1)">
+                        Player1<span id="foulIndicator1" class="foul-indicator"></span>
+                    </label>
+                    <span class="tpa-display">TPA <strong id="player1Tpa">-</strong></span>
+                    <span class="be-display" id="player1Stats">B0 E0</span>
+                </div>
+                <div class="player-stats-box">
+                    <div class="d-flex justify-content-end">
+                        <div class="stat-cell stat-racks" id="player1Racks">0</div>
+                        <div class="stat-cell stat-runouts text-danger" id="player1RunOuts">0</div>
+                    </div>
+                    <div class="kicks-row" id="kicks1"></div>
+                    <div class="d-flex">
+                        <span id="circle1" class="annotation-cell">
+                            <label id="whiteLabel1" class="white-label-new"></label>
+                        </span>
+                        <label id="grayLabel1" class="gray-label-new"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player 2 Section -->
+        <div class="player-section mb-3" id="player2Section">
+            <div class="d-flex align-items-stretch">
+                <div class="player-name-column">
+                    <label id="player2Label" class="player-name-box btn btn-outline-primary" for="player2Option" onclick="selectPlayer(2)">
+                        Player2<span id="foulIndicator2" class="foul-indicator"></span>
+                    </label>
+                    <span class="tpa-display">TPA <strong id="player2Tpa">-</strong></span>
+                    <span class="be-display" id="player2Stats">B0 E0</span>
+                </div>
+                <div class="player-stats-box">
+                    <div class="d-flex justify-content-end">
+                        <div class="stat-cell stat-racks" id="player2Racks">0</div>
+                        <div class="stat-cell stat-runouts text-danger" id="player2RunOuts">0</div>
+                    </div>
+                    <div class="kicks-row" id="kicks2"></div>
+                    <div class="d-flex">
+                        <span id="circle2" class="annotation-cell">
+                            <label id="whiteLabel2" class="white-label-new"></label>
+                        </span>
+                        <label id="grayLabel2" class="gray-label-new"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden score div for compatibility -->
+        <div id="score" style="display: none;"></div>
         <div id="scoreButtons" class="container mt-2" style="display: block;">
-            <div class="row justify-content-center mb-2">
-                <div class="col-2">
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="button1" class="btn btn-secondary btn-square">1</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="button2" class="btn btn-secondary btn-square">2</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="button3" class="btn btn-secondary btn-square">3</button>
                 </div>
             </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-2">
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="button4" class="btn btn-secondary btn-square">4</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="button5" class="btn btn-secondary btn-square">5</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="button6" class="btn btn-secondary btn-square">6</button>
                 </div>
             </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-2">
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="button7" class="btn btn-secondary btn-square">7</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="button8" class="btn btn-secondary btn-square">8</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="button9" class="btn btn-secondary btn-square">9</button>
                 </div>
             </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-2">
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="button10" class="btn btn-secondary btn-square">10</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-2">
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="button0" class="btn btn-secondary btn-square">0</button>
                 </div>
             </div>
-            <div class="row justify-content-center mb-2">
-            </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-2">
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonM" class="btn btn-secondary btn-square">M</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonK" class="btn btn-secondary btn-square">K</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonS" class="btn btn-secondary btn-square">S</button>
                 </div>
             </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-2">
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonP" class="btn btn-dark btn-square">P</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonG" class="btn btn-success btn-square">G</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonN" class="btn btn-dark btn-square">N</button>
                 </div>
             </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-2">
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonn" class="btn btn-secondary btn-square">n</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonx" class="btn btn-secondary btn-square">x</button>
                 </div>
-                <div class="col-2">
+                <div class="col-auto p-0">
                     <button type="button" id="buttonp" class="btn btn-secondary btn-square">p</button>
                 </div>
             </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-5">
-                    <button type="button" id="buttonK-in" class="btn btn-secondary" style="width: 150px; height: 40px; margin: 0.3em">first shot kick-in</button>
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
+                    <button type="button" id="buttonK-in" class="btn btn-secondary" style="width: 150px; height: 40px; margin: 0.15em">first shot kick-in</button>
                 </div>
             </div>
         </div>
@@ -538,6 +747,21 @@
                             <small>Matches</small>
                         </div>
                     </div>
+                    <hr class="my-2">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 id="statsBreakAndRuns" class="text-success">---</h4>
+                            <small>Break & Runs</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 id="statsRunOuts" class="text-success">---</h4>
+                            <small>Run Outs</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 id="statsPerfectRacks" class="text-success">---</h4>
+                            <small>Perfect Racks</small>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -621,6 +845,35 @@
             </div>
         </div>
 
+        <!-- Display Options -->
+        <div class="card mb-3">
+            <div class="card-header">Display Options</div>
+            <div class="card-body">
+                <p class="mb-2 fw-bold small">Show during match:</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="showBR" checked onchange="saveDisplaySettings()">
+                    <label class="form-check-label" for="showBR">BR (Break & Run)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="showRO" checked onchange="saveDisplaySettings()">
+                    <label class="form-check-label" for="showRO">RO (Run Out)</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="showPR" checked onchange="saveDisplaySettings()">
+                    <label class="form-check-label" for="showPR">PR (Perfect Rack)</label>
+                </div>
+                <p class="mb-2 fw-bold small">Error display:</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="errorDisplay" id="errorTotal" value="total" checked onchange="saveDisplaySettings()">
+                    <label class="form-check-label" for="errorTotal">Total errors (E)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="errorDisplay" id="errorByType" value="byType" onchange="saveDisplaySettings()">
+                    <label class="form-check-label" for="errorByType">By type (M/B/K/S/P)</label>
+                </div>
+            </div>
+        </div>
+
         <!-- Danger Zone -->
         <div class="card border-danger">
             <div class="card-header bg-danger text-white">Danger Zone</div>
@@ -633,6 +886,13 @@
     </div>
 
     <script>
+        // Global settings for display options
+        let displaySettings = {
+            showBR: true,
+            showRO: true,
+            showPR: true,
+            errorDisplay: 'total' // 'total' or 'byType'
+        };
         function getCookie(cname) {
             var name = cname + "=";
             var decodedCookie = decodeURIComponent(document.cookie);
@@ -702,6 +962,7 @@
                 startDate: match.startDate,
                 players: match.players,
                 score: match.score,
+                rackErrors: match.rackErrors,
                 currentRack: match.currentRack,
                 currentTurn: match.currentTurn,
                 currentPlayer: match.currentPlayer,
@@ -754,6 +1015,7 @@
                 const restoredMatch = new Match(state.players[0].name, state.players[1].name, state.gameType);
                 restoredMatch.startDate = state.startDate;
                 restoredMatch.score = state.score;
+                restoredMatch.rackErrors = state.rackErrors || { player1: 0, player2: 0 };
                 restoredMatch.currentRack = state.currentRack;
                 restoredMatch.currentTurn = state.currentTurn;
                 restoredMatch.currentPlayer = state.currentPlayer;
@@ -830,29 +1092,37 @@
                     { name: player2name }
                 ];
                 this.score = {
-                    player1: { 
-                        racksWon: 0, 
-                        ballsPotted: 0, 
-                        missErrors: 0, 
-                        breakErrors: 0, 
-                        kickErrors: 0, 
-                        safetyErrors: 0, 
-                        positionError: 0
-                    },
-                    player2: { 
-                        racksWon: 0, 
-                        ballsPotted: 0, 
-                        missErrors: 0, 
+                    player1: {
+                        racksWon: 0,
+                        ballsPotted: 0,
+                        missErrors: 0,
                         breakErrors: 0,
                         kickErrors: 0,
                         safetyErrors: 0,
-                        positionError: 0
+                        positionError: 0,
+                        runOuts: 0,
+                        breakAndRuns: 0,
+                        perfectRacks: 0
+                    },
+                    player2: {
+                        racksWon: 0,
+                        ballsPotted: 0,
+                        missErrors: 0,
+                        breakErrors: 0,
+                        kickErrors: 0,
+                        safetyErrors: 0,
+                        positionError: 0,
+                        runOuts: 0,
+                        breakAndRuns: 0,
+                        perfectRacks: 0
                     }
                 };
                 // add a dummy element to the racks to have the first rack with index 1 instead of 0
                 this.racks = [null];
                 this.currentRack = 1;
                 this.currentTurn = 1;
+                // Track errors per rack for perfect rack detection
+                this.rackErrors = { player1: 0, player2: 0 };
                 this.currentPlayer = 1;
                 this.gameType = gameType;
                 this.racks.push({turns:[null, new Turn(this.currentPlayer,true,this.gameType)]});
@@ -967,12 +1237,16 @@
                     this.racks[this.currentRack].turns[this.currentTurn].player = this.currentPlayer;
                 } else {
                     this.updateScore(this.racks[this.currentRack].turns[this.currentTurn]);
-                    const tripleFoul = this.getTurn().consecutiveErrors >= 3;
+                    const tripleFoul = this.gameType !== 8 && this.getTurn().consecutiveErrors >= 3;
                     this.getTurn().score = scoreToString(this.score);
                     if (this.racks[this.currentRack].turns[this.currentTurn].isWinning()) {
+                        // Detect achievements before creating new rack
+                        this.detectRackAchievements(this.getTurn());
                         this.racks.push({ turns: [null] });
                         this.currentRack++;
                         this.currentTurn = 1;
+                        // Reset per-rack error tracking
+                        this.rackErrors = { player1: 0, player2: 0 };
                         this.racks[this.currentRack].turns.push(new Turn(this.currentPlayer,true,this.gameType));
                     } else {
                         let ballsRemaining = this.getTurn().ballsRemaining - Math.max(this.getTurn().tpaAnnotation.totalPotted, this.getTurn().tpaAnnotation.breakPotted);
@@ -1065,6 +1339,113 @@
                 } else {
                     turn.consecutiveErrors = 0;
                 }
+
+                // Track per-rack errors for perfect rack detection
+                let turnErrors = 0;
+                // missErrors
+                if (turn.tpaAnnotation.missErrors) {
+                    turnErrors += turn.tpaAnnotation.missErrors;
+                }
+                // breakErrors
+                if (turn.isBreakShot() && (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit)) {
+                    if (turn.tpaAnnotation.pocketed) {
+                        if (!turn.tpaAnnotation.kick && !turn.tpaAnnotation.safety && !turn.tpaAnnotation.missErrors) {
+                            turnErrors++;
+                        } else if (turn.tpaAnnotation.missErrors) {
+                            turnErrors++; // positionError from break miss+pocketed
+                        }
+                    } else {
+                        turnErrors++;
+                    }
+                }
+                // kickErrors
+                if (turn.tpaAnnotation.kick && (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed)) {
+                    turnErrors++;
+                }
+                // positionError (same logic as above)
+                if (turn.tpaAnnotation.missErrors !== 2 && !turn.tpaAnnotation.safeX && !turn.isWinning() && turn.tpaAnnotation.totalPotted > 0) {
+                    if (turn.tpaAnnotation.breakPotted != turn.tpaAnnotation.totalPotted) {
+                        turnErrors++;
+                    }
+                }
+                if (turn.tpaAnnotation.pocketed && !turn.tpaAnnotation.kick && !turn.isBreak()) {
+                    turnErrors++;
+                }
+                this.rackErrors[`player${turn.player}`] += turnErrors;
+
+                // safetyErrors are attributed to previous turn's player
+                if (this.currentTurn > 1) {
+                    const previousTurn = this.racks[this.currentRack].turns[this.currentTurn-1];
+                    if (previousTurn.tpaAnnotation.safety) {
+                        if ((turn.tpaAnnotation.totalPotted > 0 && turn.tpaAnnotation.kickSequence.length === 0) ||
+                            turn.tpaAnnotation.missErrors === 2) {
+                            this.rackErrors[`player${previousTurn.player}`]++;
+                        }
+                    }
+                }
+            }
+
+            detectRackAchievements(winningTurn) {
+                // Called when a rack is won, before creating new rack
+                if (!winningTurn.isWinning()) return;
+
+                const winningPlayer = winningTurn.player;
+                const scorePlayer = this.score[`player${winningPlayer}`];
+                const rack = this.racks[this.currentRack];
+
+                // Check Break & Run: all turns belong to breaking player
+                const isBreakAndRun = this.checkBreakAndRun(rack, winningPlayer);
+
+                // Check Run Out: not a break-and-run, opponent had error before our run
+                const isRunOut = !isBreakAndRun && this.checkRunOut(rack, winningPlayer);
+
+                // Check Perfect Rack: no errors by winning player in this rack
+                const isPerfectRack = this.rackErrors[`player${winningPlayer}`] === 0;
+
+                if (isBreakAndRun) {
+                    scorePlayer.breakAndRuns++;
+                }
+                if (isRunOut) {
+                    scorePlayer.runOuts++;
+                }
+                if (isPerfectRack) {
+                    scorePlayer.perfectRacks++;
+                }
+            }
+
+            checkBreakAndRun(rack, winningPlayer) {
+                // First turn must be break by winning player, all turns must be by same player
+                const breakTurn = rack.turns[1];
+                if (!breakTurn || breakTurn.player !== winningPlayer || !breakTurn.isBreak()) {
+                    return false;
+                }
+                for (let i = 1; i < rack.turns.length; i++) {
+                    if (rack.turns[i] && rack.turns[i].player !== winningPlayer) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            checkRunOut(rack, winningPlayer) {
+                // Opponent played at least once and their last turn had an error
+                // Find last opponent turn
+                let lastOpponentTurn = null;
+                for (let i = rack.turns.length - 1; i >= 1; i--) {
+                    const t = rack.turns[i];
+                    if (t && t.player !== winningPlayer) {
+                        lastOpponentTurn = t;
+                        break;
+                    }
+                }
+                if (!lastOpponentTurn) return false;
+
+                // Check if opponent made an error
+                const ann = lastOpponentTurn.tpaAnnotation;
+                return ann.missErrors > 0 ||
+                       ann.pocketed ||
+                       ann.noHit ||
+                       (ann.kick && (ann.pocketed || ann.noHit));
             }
 
             // History navigation methods
@@ -1324,30 +1705,61 @@
             const buttons = document.getElementById('scoreButtons').querySelectorAll('button');
             // for each button, add the id to the buttonIDs array
             buttons.forEach(button => buttonIDs.push(button.id));
-            // Based on ballsRemaining, hide buttons with an id greater than ballsRemaining. If the button has an id buttonX with X non-numeric, ignore it.
+
+            // Numeric button IDs (0-9)
+            const numericButtonIDs = ['button0', 'button1', 'button2', 'button3', 'button4', 'button5', 'button6', 'button7', 'button8', 'button9'];
+
+            // Check if ANY numeric button should be visible
+            const anyNumericVisible = numericButtonIDs.some(id => buttonToShow.includes(id));
+
             buttonIDs.forEach(buttonID => {
-                if (buttonToShow.includes(buttonID)) {
-                    document.getElementById(buttonID).style.display = 'block';
+                const btn = document.getElementById(buttonID);
+                const isNumeric = numericButtonIDs.includes(buttonID);
+                const shouldShow = buttonToShow.includes(buttonID);
+
+                if (isNumeric) {
+                    if (anyNumericVisible) {
+                        // Some numeric buttons visible: use visibility to maintain layout
+                        btn.style.display = '';
+                        btn.style.visibility = shouldShow ? 'visible' : 'hidden';
+                    } else {
+                        // No numeric buttons visible: collapse the space
+                        btn.style.display = 'none';
+                        btn.style.visibility = '';
+                    }
                 } else {
-                    document.getElementById(buttonID).style.display = 'none';
+                    // Non-numeric buttons: use display
+                    btn.style.display = shouldShow ? '' : 'none';
+                    btn.style.visibility = '';
                 }
             });
-            
+
             updateSwitchPlayerStatus();
             document.getElementById('endMatch').classList.remove('d-flex');
         }
 
-        function updateLabels(turn) {
+        function updateLabels(turn, skipReset = false) {
             const playerLabel = turn.player === 1 ? 'whiteLabel1' : 'whiteLabel2';
             const grayLabel = turn.player === 1 ? 'grayLabel1' : 'grayLabel2';
+            const circleEl = document.getElementById(turn.player === 1 ? 'circle1' : 'circle2');
 
-            document.getElementById(turn.player === 1 ? 'circle1' : 'circle2').style.border = turn.isWinning() ? "2px solid black" : "none";
+            // Use class for winning turn circle (for new UI)
+            if (turn.isWinning()) {
+                circleEl.classList.add('winning');
+                circleEl.style.border = "2px solid black";
+            } else {
+                circleEl.classList.remove('winning');
+                circleEl.style.border = "none";
+            }
 
-            if (turn.player === 1) {//reset of both players' labels
+            if (turn.player === 1 && !skipReset) {//reset of both players' labels
                 document.getElementById('whiteLabel2').textContent = '';
                 document.getElementById('grayLabel2').textContent = '';
+                document.getElementById('circle2').classList.remove('winning');
                 document.getElementById('circle2').style.border = "none";
                 document.getElementById('kicks').textContent = '';
+                document.getElementById('kicks1').innerHTML = '';
+                document.getElementById('kicks2').innerHTML = '';
             }
 
             let whiteLabelText = '';
@@ -1356,11 +1768,22 @@
             }
             whiteLabelText += `${turn.tpaAnnotation.totalPotted !== null ? (turn.tpaAnnotation.totalPotted >= 0 ? turn.tpaAnnotation.totalPotted : '') : ''}`;
             whiteLabelText += ` ${turn.tpaAnnotation.mainNote()}`;
-        
+
             document.getElementById(playerLabel).innerHTML = whiteLabelText;
-        
+
             document.getElementById(grayLabel).textContent = turn.tpaAnnotation.secondaryNote();
 
+            // Update kicks display - put in player-specific row
+            const kicksEl = document.getElementById(`kicks${turn.player}`);
+            kicksEl.innerHTML = kickSequence(turn.tpaAnnotation.kickSequence);
+
+            // Also update previous turn's kicks for the other player
+            if (turn.previousTurn && turn.previousTurn.tpaAnnotation.kickSequence.length > 0) {
+                const otherKicksEl = document.getElementById(`kicks${turn.previousTurn.player}`);
+                otherKicksEl.innerHTML = kickSequence(turn.previousTurn.tpaAnnotation.kickSequence);
+            }
+
+            // Keep legacy kicks div updated for compatibility
             if (turn.player === 1) {
                 document.getElementById('kicks').innerHTML = kickSequence(turn.tpaAnnotation.kickSequence);
             } else {
@@ -1368,6 +1791,54 @@
                     document.getElementById('kicks').innerHTML = kickSequence(turn.previousTurn.tpaAnnotation.kickSequence);
                 }
                 document.getElementById('kicks').innerHTML += kickSequence(turn.tpaAnnotation.kickSequence);
+            }
+
+            updateFoulIndicators();
+        }
+
+        function setPlayerLabel(playerNum, name) {
+            const label = document.getElementById(`player${playerNum}Label`);
+            // Clear existing content
+            label.textContent = '';
+            // Add name as text node
+            label.appendChild(document.createTextNode(name));
+            // Add foul indicator span
+            const span = document.createElement('span');
+            span.id = `foulIndicator${playerNum}`;
+            span.className = 'foul-indicator';
+            label.appendChild(span);
+        }
+
+        function updateFoulIndicators() {
+            if (!match) return;
+
+            // Get the last completed turn for each player to check their foul count
+            const currentTurn = match.getTurn();
+            let player1Fouls = 0;
+            let player2Fouls = 0;
+
+            // Find the most recent completed turn for each player
+            let turn = currentTurn;
+            while (turn && (player1Fouls === 0 || player2Fouls === 0)) {
+                if (turn.tpaAnnotation.totalPotted !== null) { // completed turn
+                    if (turn.player === 1 && player1Fouls === 0) {
+                        player1Fouls = turn.consecutiveErrors;
+                    } else if (turn.player === 2 && player2Fouls === 0) {
+                        player2Fouls = turn.consecutiveErrors;
+                    }
+                }
+                turn = turn.previousTurn;
+            }
+
+            // Update indicators (show only for 1 or 2 fouls, 3+ triggers auto-win)
+            const indicator1 = document.getElementById('foulIndicator1');
+            const indicator2 = document.getElementById('foulIndicator2');
+
+            if (indicator1) {
+                indicator1.textContent = player1Fouls >= 1 && player1Fouls <= 2 ? `F${player1Fouls}` : '';
+            }
+            if (indicator2) {
+                indicator2.textContent = player2Fouls >= 1 && player2Fouls <= 2 ? `F${player2Fouls}` : '';
             }
         }
 
@@ -1611,6 +2082,7 @@
             });
             if (viewId !== 'main') {
                 document.getElementById('dateTitle').style.display = 'none';
+                document.getElementById('gameTypeTitle').style.display = 'none';
                 document.getElementById('endMatch').classList.remove('d-flex');
             }
         }
@@ -1870,6 +2342,9 @@
             document.getElementById('statsTpaAvg').textContent = stats.avgTpa;
             document.getElementById('statsWinRate').textContent = stats.winRate + '%';
             document.getElementById('statsMatches').textContent = stats.totalMatches;
+            document.getElementById('statsBreakAndRuns').textContent = stats.totalBreakAndRuns;
+            document.getElementById('statsRunOuts').textContent = stats.totalRunOuts;
+            document.getElementById('statsPerfectRacks').textContent = stats.totalPerfectRacks;
 
             updateTpaTrendChart(stats.history);
             currentErrorHistory = stats.errorHistory;
@@ -1905,6 +2380,9 @@
                 totalKickErrors: 0,
                 totalSafetyErrors: 0,
                 totalPositionErrors: 0,
+                totalBreakAndRuns: 0,
+                totalRunOuts: 0,
+                totalPerfectRacks: 0,
                 opponents: {},
                 history: [],
                 errorHistory: []
@@ -1923,6 +2401,10 @@
                 stats.totalKickErrors += playerScore.kickErrors;
                 stats.totalSafetyErrors += playerScore.safetyErrors;
                 stats.totalPositionErrors += playerScore.positionError;
+                // Achievements (with fallback for old records)
+                stats.totalBreakAndRuns += playerScore.breakAndRuns || 0;
+                stats.totalRunOuts += playerScore.runOuts || 0;
+                stats.totalPerfectRacks += playerScore.perfectRacks || 0;
 
                 const won = playerScore.racksWon > opponentScore.racksWon;
                 if (won) stats.wins++;
@@ -2096,6 +2578,34 @@
         async function loadSettings() {
             const matchCount = await tpaDB.getMatchCount();
             document.getElementById('matchCount').textContent = matchCount;
+            // Load display settings
+            const savedSettings = await tpaDB.getSetting('displaySettings');
+            if (savedSettings) {
+                displaySettings = { ...displaySettings, ...savedSettings };
+            }
+            // Update checkboxes
+            const showBR = document.getElementById('showBR');
+            const showRO = document.getElementById('showRO');
+            const showPR = document.getElementById('showPR');
+            const errorTotal = document.getElementById('errorTotal');
+            const errorByType = document.getElementById('errorByType');
+            if (showBR) showBR.checked = displaySettings.showBR;
+            if (showRO) showRO.checked = displaySettings.showRO;
+            if (showPR) showPR.checked = displaySettings.showPR;
+            if (errorTotal) errorTotal.checked = displaySettings.errorDisplay === 'total';
+            if (errorByType) errorByType.checked = displaySettings.errorDisplay === 'byType';
+        }
+
+        async function saveDisplaySettings() {
+            displaySettings.showBR = document.getElementById('showBR').checked;
+            displaySettings.showRO = document.getElementById('showRO').checked;
+            displaySettings.showPR = document.getElementById('showPR').checked;
+            displaySettings.errorDisplay = document.getElementById('errorByType').checked ? 'byType' : 'total';
+            await tpaDB.setSetting('displaySettings', displaySettings);
+            // Update display if match is active
+            if (match) {
+                updatePlayerDisplay();
+            }
         }
 
         function getGoogleSheetUrl() {
@@ -2182,11 +2692,13 @@
 
             // Show match interface
             document.getElementById('dateTitle').style.display = 'block';
+            document.getElementById('gameTypeTitle').style.display = 'block';
             document.getElementById('main').style.display = 'block';
-            
+
             document.getElementById('dateTitle').textContent = match.startDate;
-            document.getElementById('player1Label').textContent = match.players[0].name;
-            document.getElementById('player2Label').textContent = match.players[1].name;
+            document.getElementById('gameTypeTitle').textContent = gameTypeName(match.gameType);
+            setPlayerLabel(1, match.players[0].name);
+            setPlayerLabel(2, match.players[1].name);
 
             const buttons = document.getElementById('scoreButtons').querySelectorAll('button.btn-square');
             // for each button, add match's annotate function as a listener
@@ -2201,6 +2713,7 @@
 
             updateLabels(match.getTurn());
             updateButtons(match.getTurn());
+            updatePlayerDisplay();
             initSwipeNavigation();
             saveMatchState();
         }
@@ -2217,11 +2730,13 @@
 
             // Show match interface
             document.getElementById('dateTitle').style.display = 'block';
+            document.getElementById('gameTypeTitle').style.display = 'block';
             document.getElementById('main').style.display = 'block';
 
             document.getElementById('dateTitle').textContent = match.startDate;
-            document.getElementById('player1Label').textContent = match.players[0].name;
-            document.getElementById('player2Label').textContent = match.players[1].name;
+            document.getElementById('gameTypeTitle').textContent = gameTypeName(match.gameType);
+            setPlayerLabel(1, match.players[0].name);
+            setPlayerLabel(2, match.players[1].name);
 
             const buttons = document.getElementById('scoreButtons').querySelectorAll('button.btn-square');
             buttons.forEach(button => button.addEventListener('click', match.annotate.bind(match)));
@@ -2232,13 +2747,66 @@
                 saveMatchState();
             });
 
-            updateLabels(match.getTurn());
+            // Find the last turn of each player across all racks
+            let lastPlayer1Turn = null;
+            let lastPlayer1Position = { rack: 0, turn: 0 };
+            let lastPlayer2Turn = null;
+            let lastPlayer2Position = { rack: 0, turn: 0 };
+
+            // Search backwards through all racks to find last turn of each player
+            for (let r = match.currentRack; r >= 1; r--) {
+                const maxTurn = (r === match.currentRack) ? match.currentTurn : match.racks[r].turns.length - 1;
+                for (let t = maxTurn; t >= 1; t--) {
+                    const turn = match.racks[r].turns[t];
+                    if (!turn) continue;
+
+                    if (turn.player === 1 && !lastPlayer1Turn) {
+                        lastPlayer1Turn = turn;
+                        lastPlayer1Position = { rack: r, turn: t };
+                    }
+                    if (turn.player === 2 && !lastPlayer2Turn) {
+                        lastPlayer2Turn = turn;
+                        lastPlayer2Position = { rack: r, turn: t };
+                    }
+                    if (lastPlayer1Turn && lastPlayer2Turn) break;
+                }
+                if (lastPlayer1Turn && lastPlayer2Turn) break;
+            }
+
+            // Determine if player 2's turn should be shown
+            // Player 2 gets reset when player 1 plays, so only show player 2 if their
+            // last turn is AFTER player 1's last turn
+            let showPlayer2 = false;
+            if (lastPlayer2Turn) {
+                if (!lastPlayer1Turn) {
+                    showPlayer2 = true;
+                } else {
+                    // Player 2 shown only if their turn is after player 1's
+                    showPlayer2 = (lastPlayer2Position.rack > lastPlayer1Position.rack) ||
+                                  (lastPlayer2Position.rack === lastPlayer1Position.rack &&
+                                   lastPlayer2Position.turn > lastPlayer1Position.turn);
+                }
+            }
+
+            // Show player 1's turn (resets player 2), then player 2's turn if valid
+            if (lastPlayer1Turn) {
+                updateLabels(lastPlayer1Turn);
+            }
+            if (showPlayer2) {
+                updateLabels(lastPlayer2Turn);
+            }
             updateButtons(match.getTurn());
             const scoreEl = document.getElementById('score');
             scoreEl.textContent = '';
             scoreEl.insertAdjacentHTML('beforeend', scoreToString(match.score));
+            updatePlayerDisplay();
             initSwipeNavigation();
             updateHistoryNavButtons();
+
+            // Restore history mode if it was active
+            if (match.isHistoryMode) {
+                enterViewMode();
+            }
 
             // Show endMatch button if current turn is a break (ready for new rack)
             if (match.getTurn().isBreak() && !match.getTurn().hasBeenPlayed()) {
@@ -2361,6 +2929,13 @@
             document.getElementById('score').textContent = '';
             document.getElementById('score').insertAdjacentHTML('beforeend', scoreToString(match.score));
             updateHistoryNavButtons();
+
+            // Show endMatch button if current turn is a break and not yet played
+            if (match.getTurn().isBreak() && !match.getTurn().hasBeenPlayed()) {
+                document.getElementById('endMatch').classList.add('d-flex');
+            } else {
+                document.getElementById('endMatch').classList.remove('d-flex');
+            }
         }
 
         function updateViewModeDisplay() {
@@ -2374,14 +2949,19 @@
         }
 
         function displayHistoricalTurn(turn) {
-            // Clear both player displays
+            // Clear both player displays - use CSS classes, not inline styles
             document.getElementById('whiteLabel1').textContent = '';
             document.getElementById('whiteLabel2').textContent = '';
             document.getElementById('grayLabel1').textContent = '';
             document.getElementById('grayLabel2').textContent = '';
-            document.getElementById('circle1').style.border = 'none';
-            document.getElementById('circle2').style.border = 'none';
+            // Remove inline border styles so CSS rules can take effect
+            document.getElementById('circle1').style.removeProperty('border');
+            document.getElementById('circle2').style.removeProperty('border');
+            document.getElementById('circle1').classList.remove('winning');
+            document.getElementById('circle2').classList.remove('winning');
             document.getElementById('kicks').textContent = '';
+            document.getElementById('kicks1').innerHTML = '';
+            document.getElementById('kicks2').innerHTML = '';
 
             // Display the viewed turn
             const playerLabel = turn.player === 1 ? 'whiteLabel1' : 'whiteLabel2';
@@ -2400,9 +2980,20 @@
             labelEl.insertAdjacentHTML('beforeend', whiteLabelText);
 
             document.getElementById(grayLabel).textContent = turn.tpaAnnotation.secondaryNote();
-            document.getElementById(circle).style.border = turn.isWinning() ? "2px solid black" : "none";
 
-            // Show kicks
+            // Handle winning turn display - use CSS class only, no inline styles
+            const circleEl = document.getElementById(circle);
+            if (turn.isWinning()) {
+                circleEl.classList.add('winning');
+            }
+            // CSS rules handle border visibility:
+            // .history-mode .annotation-cell { border: none }
+            // .history-mode .annotation-cell.winning { border: 2px solid orange, border-radius: 50% }
+
+            // Show kicks in player-specific row
+            document.getElementById(`kicks${turn.player}`).innerHTML = kickSequence(turn.tpaAnnotation.kickSequence);
+
+            // Show kicks in legacy element for compatibility
             const kicksEl = document.getElementById('kicks');
             kicksEl.textContent = '';
             kicksEl.insertAdjacentHTML('beforeend', kickSequence(turn.tpaAnnotation.kickSequence));
@@ -2647,11 +3238,60 @@
         }
 
         function tpaScore(player) {
-            return Math.trunc(player.ballsPotted/(player.ballsPotted+totalErrors(player))*1000);
+            const total = player.ballsPotted + totalErrors(player);
+            if (total === 0) return '-';
+            return Math.trunc(player.ballsPotted / total * 1000);
+        }
+
+        function gameTypeName(gameType) {
+            const names = { 8: '8-Ball', 9: '9-Ball', 10: '10-Ball' };
+            return names[gameType] || gameType + '-Ball';
+        }
+
+        function formatAchievements(player) {
+            const parts = [];
+            if (displaySettings.showBR && player.breakAndRuns > 0) parts.push(`BR:${player.breakAndRuns}`);
+            if (displaySettings.showRO && player.runOuts > 0) parts.push(`RO:${player.runOuts}`);
+            if (displaySettings.showPR && player.perfectRacks > 0) parts.push(`PR:${player.perfectRacks}`);
+            return parts.length > 0 ? parts.join(' ') : '-';
+        }
+
+        function formatErrorsByType(player) {
+            const parts = [];
+            if (player.missErrors > 0) parts.push(`M${player.missErrors}`);
+            if (player.breakErrors > 0) parts.push(`B${player.breakErrors}`);
+            if (player.kickErrors > 0) parts.push(`K${player.kickErrors}`);
+            if (player.safetyErrors > 0) parts.push(`S${player.safetyErrors}`);
+            if (player.positionError > 0) parts.push(`P${player.positionError}`);
+            return parts.length > 0 ? parts.join('/') : '0';
+        }
+
+        function formatPlayerStats(player) {
+            if (displaySettings.errorDisplay === 'byType') {
+                return `B${player.ballsPotted} ${formatErrorsByType(player)}`;
+            }
+            return `B${player.ballsPotted} E${totalErrors(player)}`;
         }
 
         function scoreToString(score) {
-            return `<small>(${score.player1.ballsPotted},${totalErrors(score.player1)},${tpaScore(score.player1)}) <strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong> (${score.player2.ballsPotted},${totalErrors(score.player2)},${tpaScore(score.player2)})</small>`;
+            const tpa1 = tpaScore(score.player1);
+            const tpa2 = tpaScore(score.player2);
+            const stats1 = formatPlayerStats(score.player1);
+            const stats2 = formatPlayerStats(score.player2);
+            let achievementsRow = '';
+            const showAnyAchievement = displaySettings.showBR || displaySettings.showRO || displaySettings.showPR;
+            if (showAnyAchievement) {
+                const achieve1 = formatAchievements(score.player1);
+                const achieve2 = formatAchievements(score.player2);
+                if (achieve1 !== '-' || achieve2 !== '-') {
+                    achievementsRow = `<div class="score-achievements">${achieve1} | ${achieve2}</div>`;
+                }
+            }
+            return `<div class="score-display">
+                <div class="score-racks"><strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong></div>
+                <div class="score-tpa"><span class="score-stats">${stats1}</span> <span class="tpa-value">${tpa1}</span> TPA <span class="tpa-value">${tpa2}</span> <span class="score-stats">${stats2}</span></div>
+                ${achievementsRow}
+            </div>`;
         }
 
         function togglePlayer(event) {
@@ -2662,6 +3302,7 @@
                 updateButtons(match.getTurn());
                 //score update
                 document.getElementById('score').innerHTML = scoreToString(match.score);
+                updatePlayerDisplay();
                 // If the current turn is a break, show endMatch, otherwise hide it
                 if (match.getTurn().isBreak()) {
                     document.getElementById('endMatch').classList.add('d-flex');
@@ -2674,11 +3315,59 @@
             }
         }
 
+        function selectPlayer(playerNum) {
+            if (!match || match.currentPlayer === playerNum) return;
+            if (!match.canSwitchPlayer()) return;
+
+            // Simulate click on the appropriate label
+            const event = { target: { id: `player${playerNum}Label` } };
+            togglePlayer(event);
+        }
+
+        function updatePlayerDisplay() {
+            if (!match) return;
+
+            // Update racks won
+            document.getElementById('player1Racks').textContent = match.score.player1.racksWon;
+            document.getElementById('player2Racks').textContent = match.score.player2.racksWon;
+
+            // Update run outs (BR + RO combined for display)
+            const ro1 = (match.score.player1.breakAndRuns || 0) + (match.score.player1.runOuts || 0);
+            const ro2 = (match.score.player2.breakAndRuns || 0) + (match.score.player2.runOuts || 0);
+            document.getElementById('player1RunOuts').textContent = ro1;
+            document.getElementById('player2RunOuts').textContent = ro2;
+
+            // Update TPA
+            document.getElementById('player1Tpa').textContent = tpaScore(match.score.player1);
+            document.getElementById('player2Tpa').textContent = tpaScore(match.score.player2);
+
+            // Update Stats (Balls and Errors - format depends on settings)
+            document.getElementById('player1Stats').textContent = formatPlayerStats(match.score.player1);
+            document.getElementById('player2Stats').textContent = formatPlayerStats(match.score.player2);
+
+            // Update active player styling
+            const label1 = document.getElementById('player1Label');
+            const label2 = document.getElementById('player2Label');
+            if (match.currentPlayer === 1) {
+                label1.classList.add('active');
+                label2.classList.remove('active');
+            } else {
+                label1.classList.remove('active');
+                label2.classList.add('active');
+            }
+        }
+
+        function showPlayerStatsFromMatch(playerNum) {
+            if (!match) return;
+            const playerName = match.players[playerNum - 1].name;
+            document.getElementById('statsPlayerSelect').value = playerName;
+            showStatsView();
+        }
+
         function updateSwitchPlayerStatus() {
             const radioButtons = document.querySelectorAll('#playersGroup input[type="radio"]');
-            const labelsForRadioButtons = document.querySelectorAll('#playersGroup label');
             const canSwitch = match.canSwitchPlayer();
-        
+
             // Enable or disable the radio buttons based on the checkbox
             radioButtons.forEach(radio => {
                 radio.disabled = !canSwitch;
@@ -2686,21 +3375,28 @@
                     radio.checked = true;
                 }
             });
-                
-            // Update the style of the labels to reflect the disabled state
-            labelsForRadioButtons.forEach(label => {
-                if (!canSwitch) {
-                    label.classList.add('disabled');
-                } else {
-                    label.classList.remove('disabled');
-                }
-            });
+
+            // Update the style of the player name labels to reflect the disabled state
+            const label1 = document.getElementById('player1Label');
+            const label2 = document.getElementById('player2Label');
+            if (!canSwitch) {
+                label1.classList.add('disabled');
+                label2.classList.add('disabled');
+            } else {
+                label1.classList.remove('disabled');
+                label2.classList.remove('disabled');
+            }
         }
 
         document.getElementById('playersGroup').addEventListener('click', togglePlayer);
 
-        // Add a click listener to divPlayers that resets the current turn or enters edit mode
-        document.getElementById('divPlayers').addEventListener('click', function() {
+        // Add click listeners to new player labels
+        document.getElementById('player1Label').addEventListener('click', togglePlayer);
+        document.getElementById('player2Label').addEventListener('click', togglePlayer);
+
+        // Add click listeners to annotation cells that reset the current turn or enter edit mode
+        function handleAnnotationClick() {
+            if (!match) return;
             if (match.isHistoryMode) {
                 // In history mode: show confirmation and edit
                 enterEditMode();
@@ -2712,7 +3408,11 @@
                 updateButtons(match.getTurn());
                 saveMatchState();
             }
-        });
+        }
+        document.getElementById('circle1').addEventListener('click', handleAnnotationClick);
+        document.getElementById('circle2').addEventListener('click', handleAnnotationClick);
+        document.getElementById('grayLabel1').addEventListener('click', handleAnnotationClick);
+        document.getElementById('grayLabel2').addEventListener('click', handleAnnotationClick);
 
         function htmlDivAnnotation(turn) {
             let kickSequence = '&nbsp;';
@@ -2799,6 +3499,10 @@
                                         <p class="mb-0 ps-2 text-start">kick errs:</p>
                                         <p class="mb-0 ps-2 text-start">safety errs:</p>
                                         <p class="mb-0 ps-2 text-start">position errs:</p>
+                                        <hr class="my-1">
+                                        <p class="mb-0 ps-2 text-start text-success">break & runs:</p>
+                                        <p class="mb-0 ps-2 text-start text-success">run outs:</p>
+                                        <p class="mb-0 ps-2 text-start text-success">perfect racks:</p>
                                       </div>
                                       <div class="text-right">
                                         <p class="mb-0 pe-2 text-end">${match.score.player1.missErrors}</p>
@@ -2806,6 +3510,10 @@
                                         <p class="mb-0 pe-2 text-end">${match.score.player1.kickErrors}</p>
                                         <p class="mb-0 pe-2 text-end">${match.score.player1.safetyErrors}</p>
                                         <p class="mb-0 pe-2 text-end">${match.score.player1.positionError}</p>
+                                        <hr class="my-1">
+                                        <p class="mb-0 pe-2 text-end text-success">${match.score.player1.breakAndRuns}</p>
+                                        <p class="mb-0 pe-2 text-end text-success">${match.score.player1.runOuts}</p>
+                                        <p class="mb-0 pe-2 text-end text-success">${match.score.player1.perfectRacks}</p>
                                       </div>
                                     </div>
                                   </td>
@@ -2816,7 +3524,11 @@
                                         <p class="mb-0 ps-2 text-start">break errs:</p>
                                         <p class="mb-0 ps-2 text-start">kick errs:</p>
                                         <p class="mb-0 ps-2 text-start">safety errs:</p>
-                                        <p class="mb-0 ps-2 text-start">position errs:
+                                        <p class="mb-0 ps-2 text-start">position errs:</p>
+                                        <hr class="my-1">
+                                        <p class="mb-0 ps-2 text-start text-success">break & runs:</p>
+                                        <p class="mb-0 ps-2 text-start text-success">run outs:</p>
+                                        <p class="mb-0 ps-2 text-start text-success">perfect racks:</p>
                                       </div>
                                       <div class="text-right">
                                         <p class="mb-0 pe-2 text-end">${match.score.player2.missErrors}</p>
@@ -2824,6 +3536,10 @@
                                         <p class="mb-0 pe-2 text-end">${match.score.player2.kickErrors}</p>
                                         <p class="mb-0 pe-2 text-end">${match.score.player2.safetyErrors}</p>
                                         <p class="mb-0 pe-2 text-end">${match.score.player2.positionError}</p>
+                                        <hr class="my-1">
+                                        <p class="mb-0 pe-2 text-end text-success">${match.score.player2.breakAndRuns}</p>
+                                        <p class="mb-0 pe-2 text-end text-success">${match.score.player2.runOuts}</p>
+                                        <p class="mb-0 pe-2 text-end text-success">${match.score.player2.perfectRacks}</p>
                                       </div>
                                     </div>
                                   </td>`;
@@ -2852,6 +3568,9 @@
                         kickErrors: match.score.player1.kickErrors,
                         safetyErrors: match.score.player1.safetyErrors,
                         positionError: match.score.player1.positionError,
+                        runOuts: match.score.player1.runOuts,
+                        breakAndRuns: match.score.player1.breakAndRuns,
+                        perfectRacks: match.score.player1.perfectRacks,
                         tpaScore: tpaScore(match.score.player1)
                     },
                     player2: {
@@ -2862,6 +3581,9 @@
                         kickErrors: match.score.player2.kickErrors,
                         safetyErrors: match.score.player2.safetyErrors,
                         positionError: match.score.player2.positionError,
+                        runOuts: match.score.player2.runOuts,
+                        breakAndRuns: match.score.player2.breakAndRuns,
+                        perfectRacks: match.score.player2.perfectRacks,
                         tpaScore: tpaScore(match.score.player2)
                     }
                 },
