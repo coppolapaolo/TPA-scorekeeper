@@ -855,15 +855,15 @@
             <div class="card-body">
                 <p class="mb-2 fw-bold small">Show during match:</p>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="showBR" checked onchange="saveDisplaySettings()">
+                    <input class="form-check-input" type="checkbox" id="showBR" onchange="saveDisplaySettings()">
                     <label class="form-check-label" for="showBR">BR (Break & Run)</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="showRO" checked onchange="saveDisplaySettings()">
+                    <input class="form-check-input" type="checkbox" id="showRO" onchange="saveDisplaySettings()">
                     <label class="form-check-label" for="showRO">RO (Run Out)</label>
                 </div>
                 <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="showPR" checked onchange="saveDisplaySettings()">
+                    <input class="form-check-input" type="checkbox" id="showPR" onchange="saveDisplaySettings()">
                     <label class="form-check-label" for="showPR">PR (Perfect Rack)</label>
                 </div>
                 <p class="mb-2 fw-bold small">Error display:</p>
@@ -892,9 +892,9 @@
     <script>
         // Global settings for display options
         let displaySettings = {
-            showBR: true,
-            showRO: true,
-            showPR: true,
+            showBR: false,
+            showRO: false,
+            showPR: false,
             errorDisplay: 'total' // 'total' or 'byType'
         };
         function getCookie(cname) {
