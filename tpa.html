@@ -309,8 +309,12 @@
             font-weight: bold;
             background: transparent;
         }
-        .stat-runouts {
-            color: #dc3545;
+        .stat-achievements {
+            font-size: 0.85em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
         }
         .annotation-cell {
             width: 80px;
@@ -445,7 +449,7 @@
                 <div class="player-stats-box">
                     <div class="d-flex justify-content-end">
                         <div class="stat-cell stat-racks" id="player1Racks">0</div>
-                        <div class="stat-cell stat-runouts text-danger" id="player1RunOuts">0</div>
+                        <div class="stat-achievements text-danger" id="player1Achievements"></div>
                     </div>
                     <div class="kicks-row" id="kicks1"></div>
                     <div class="d-flex">
@@ -471,7 +475,7 @@
                 <div class="player-stats-box">
                     <div class="d-flex justify-content-end">
                         <div class="stat-cell stat-racks" id="player2Racks">0</div>
-                        <div class="stat-cell stat-runouts text-danger" id="player2RunOuts">0</div>
+                        <div class="stat-achievements text-danger" id="player2Achievements"></div>
                     </div>
                     <div class="kicks-row" id="kicks2"></div>
                     <div class="d-flex">
@@ -914,6 +918,11 @@
             tpaDB = new TPADatabase();
             try {
                 await tpaDB.init();
+                // Load display settings from IndexedDB
+                const savedSettings = await tpaDB.getSetting('displaySettings');
+                if (savedSettings) {
+                    displaySettings = { ...displaySettings, ...savedSettings };
+                }
             } catch (e) {
                 console.error('Failed to initialize IndexedDB:', e);
             }
@@ -1288,17 +1297,18 @@
                 if (turn.tpaAnnotation.missErrors) {
                     scorePlayer.missErrors+=turn.tpaAnnotation.missErrors;
                 }
-                //update breakErrors. If it's a break shot (turn is break and totalPotted is zero or totalPotted is equal to breakPotted) and ended with noHit or pocketed
-                if (turn.isBreakShot() && (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit)) {
-                    if (turn.tpaAnnotation.pocketed) {
-                        if (!turn.tpaAnnotation.kick && !turn.tpaAnnotation.safety && !turn.tpaAnnotation.missErrors) {
-                            scorePlayer.breakErrors++;
-                        } else if (turn.tpaAnnotation.missErrors){
-                            scorePlayer.positionError++;
-                        }
-                    } else {
+                //update breakErrors. If it's a break and ended with noHit or pocketed
+                // Break error if: foul on break OR foul before making any balls after break
+                // (totalPotted <= breakPotted means no balls made after the break)
+                if (turn.isBreak() && (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit)) {
+                    const noExtraBalls = turn.tpaAnnotation.totalPotted <= (turn.tpaAnnotation.breakPotted || 0);
+                    if (noExtraBalls) {
+                        // Foul on break or immediately after - break error
                         scorePlayer.breakErrors++;
-                    }   
+                    } else {
+                        // Made balls after break then fouled - position error
+                        scorePlayer.positionError++;
+                    }
                 }
                 //update kickErrors
                 if (turn.tpaAnnotation.kick && (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed)) {
@@ -1346,17 +1356,9 @@
                 if (turn.tpaAnnotation.missErrors) {
                     turnErrors += turn.tpaAnnotation.missErrors;
                 }
-                // breakErrors
-                if (turn.isBreakShot() && (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit)) {
-                    if (turn.tpaAnnotation.pocketed) {
-                        if (!turn.tpaAnnotation.kick && !turn.tpaAnnotation.safety && !turn.tpaAnnotation.missErrors) {
-                            turnErrors++;
-                        } else if (turn.tpaAnnotation.missErrors) {
-                            turnErrors++; // positionError from break miss+pocketed
-                        }
-                    } else {
-                        turnErrors++;
-                    }
+                // breakErrors - same logic as updateScore
+                if (turn.isBreak() && (turn.tpaAnnotation.pocketed || turn.tpaAnnotation.noHit)) {
+                    turnErrors++; // break error or position error from break foul
                 }
                 // kickErrors
                 if (turn.tpaAnnotation.kick && (turn.tpaAnnotation.noHit || turn.tpaAnnotation.pocketed)) {
@@ -1428,24 +1430,21 @@
             }
 
             checkRunOut(rack, winningPlayer) {
-                // Opponent played at least once and their last turn had an error
-                // Find last opponent turn
-                let lastOpponentTurn = null;
-                for (let i = rack.turns.length - 1; i >= 1; i--) {
+                // Run Out: winning player cleared the table in exactly ONE turn
+                // after opponent's error (not a break-and-run)
+
+                // Count winning player's turns in this rack
+                let winningPlayerTurns = 0;
+                for (let i = 1; i < rack.turns.length; i++) {
                     const t = rack.turns[i];
-                    if (t && t.player !== winningPlayer) {
-                        lastOpponentTurn = t;
-                        break;
+                    if (t && t.player === winningPlayer) {
+                        winningPlayerTurns++;
                     }
                 }
-                if (!lastOpponentTurn) return false;
 
-                // Check if opponent made an error
-                const ann = lastOpponentTurn.tpaAnnotation;
-                return ann.missErrors > 0 ||
-                       ann.pocketed ||
-                       ann.noHit ||
-                       (ann.kick && (ann.pocketed || ann.noHit));
+                // Run out = winning player had exactly ONE turn (the winning turn)
+                // and opponent had at least one turn (which means opponent broke or played)
+                return winningPlayerTurns === 1;
             }
 
             // History navigation methods
@@ -3250,10 +3249,19 @@
 
         function formatAchievements(player) {
             const parts = [];
-            if (displaySettings.showBR && player.breakAndRuns > 0) parts.push(`BR:${player.breakAndRuns}`);
-            if (displaySettings.showRO && player.runOuts > 0) parts.push(`RO:${player.runOuts}`);
-            if (displaySettings.showPR && player.perfectRacks > 0) parts.push(`PR:${player.perfectRacks}`);
+            if (displaySettings.showBR) parts.push(`BR:${player.breakAndRuns || 0}`);
+            if (displaySettings.showRO) parts.push(`RO:${player.runOuts || 0}`);
+            if (displaySettings.showPR) parts.push(`PR:${player.perfectRacks || 0}`);
             return parts.length > 0 ? parts.join(' ') : '-';
+        }
+
+        // Compact format for player section display (e.g., "1/0/2" for BR/RO/PR)
+        function formatAchievementsCompact(player) {
+            const parts = [];
+            if (displaySettings.showBR) parts.push(player.breakAndRuns || 0);
+            if (displaySettings.showRO) parts.push(player.runOuts || 0);
+            if (displaySettings.showPR) parts.push(player.perfectRacks || 0);
+            return parts.length > 0 ? parts.join('/') : '';
         }
 
         function formatErrorsByType(player) {
@@ -3331,11 +3339,9 @@
             document.getElementById('player1Racks').textContent = match.score.player1.racksWon;
             document.getElementById('player2Racks').textContent = match.score.player2.racksWon;
 
-            // Update run outs (BR + RO combined for display)
-            const ro1 = (match.score.player1.breakAndRuns || 0) + (match.score.player1.runOuts || 0);
-            const ro2 = (match.score.player2.breakAndRuns || 0) + (match.score.player2.runOuts || 0);
-            document.getElementById('player1RunOuts').textContent = ro1;
-            document.getElementById('player2RunOuts').textContent = ro2;
+            // Update achievements (BR/RO/PR based on settings)
+            document.getElementById('player1Achievements').textContent = formatAchievementsCompact(match.score.player1);
+            document.getElementById('player2Achievements').textContent = formatAchievementsCompact(match.score.player2);
 
             // Update TPA
             document.getElementById('player1Tpa').textContent = tpaScore(match.score.player1);
