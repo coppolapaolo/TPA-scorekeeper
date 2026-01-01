@@ -3255,13 +3255,13 @@
             return parts.length > 0 ? parts.join(' ') : '-';
         }
 
-        // Compact format for player section display (e.g., "1/0/2" for BR/RO/PR)
+        // Compact format for player section display (e.g., "BR1 RO0")
         function formatAchievementsCompact(player) {
             const parts = [];
-            if (displaySettings.showBR) parts.push(player.breakAndRuns || 0);
-            if (displaySettings.showRO) parts.push(player.runOuts || 0);
-            if (displaySettings.showPR) parts.push(player.perfectRacks || 0);
-            return parts.length > 0 ? parts.join('/') : '';
+            if (displaySettings.showBR) parts.push(`BR${player.breakAndRuns || 0}`);
+            if (displaySettings.showRO) parts.push(`RO${player.runOuts || 0}`);
+            if (displaySettings.showPR) parts.push(`PR${player.perfectRacks || 0}`);
+            return parts.join(' ');
         }
 
         function formatErrorsByType(player) {
