@@ -59,7 +59,7 @@ The app runs entirely in the browser with no server required. Built with Bootstr
 
 ## Learn More About TPA
 
-The Total Performance Average system was developed by Accu-Stats Video Productions. Learn more at [Accu-Stats TPA Rating](https://billiards.colostate.edu/faq/rating/accu-stats-tpa/).
+The Total Performance Average system was developed by Accu-Stats Video Productions. Learn more at [Accu-Stats TPA Rating](https://drdavepoolinfo.com/faq/rating/accu-stats-tpa/).
 
 ## License
 
