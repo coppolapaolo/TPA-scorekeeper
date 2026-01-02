@@ -1,37 +1,70 @@
 # TPA Scorekeeper
 
-Welcome to the "TPA Scorekeeper" app, a web-based tool designed to help players and enthusiasts keep track of scores during a 9-ball pool game using the Total Performance Average (TPA) rating method. This app allows you to input player names, mark balls pocketed, note errors committed, and manage multiple innings, ultimately providing a comprehensive TPA scoresheet and final score summary at the end of the match.
+A web-based tool for tracking pool match scores using the Accu-Stats Total Performance Average (TPA) rating system. Supports **9-ball**, **8-ball**, and **10-ball** games.
+
+Built with love for American pool by Paolo Coppola.
 
 ## Features
 
-- **Player Name Entry**: Input names for the two players at the start of the game.
-- **Score Tracking**: Mark the number of balls pocketed and errors made for each player. 
-- **Error Logging**: Follows the official TPA notation for all possible errors, ensuring accurate scorekeeping.
-- **Match Summary**: Provides a detailed TPA scoresheet and final scoring, including balls pocketed, errors committed, TPA score, and racks won, updated in real-time throughout the game.
-- **Responsive Design**: Optimized for smartphones but compatible with any modern browser that supports JavaScript.
+### Match Scoring
+- **TPA Notation**: Full support for official TPA error notation (Miss, Kick, Safety, Position, Break errors)
+- **Multi-game Support**: Track 9-ball, 8-ball, and 10-ball matches
+- **Real-time Scoring**: Live TPA calculation, balls pocketed, errors, and racks won
+- **Achievement Tracking**: Break & Run (BR), Run Out (RO), and Perfect Rack (PR) detection
+- **Foul Counter**: Visual indicator for consecutive fouls (F1, F2)
+
+### Statistics & History
+- **Local Storage**: All matches saved locally using IndexedDB
+- **TPA Trend Chart**: Track your performance over time
+- **Error Analysis**: Breakdown by error type with trend visualization
+- **Head-to-Head Records**: Compare performance against specific opponents
+- **Match History**: Browse, filter, and review past matches with full turn-by-turn navigation
+
+### Data Management
+- **Google Sheets Integration**: Optionally save match results to a Google Sheet
+- **Export/Import**: Backup and restore your match data
+- **Player Memory**: Remembers player names between sessions
+
+## Live Demo
+
+Access the app at [https://www.coppolapaolo.it/tpa.html](https://www.coppolapaolo.it/tpa.html)
 
 ## System Requirements
 
-The app is built with Bootstrap 5.3.2 and jQuery 3.6.0, ensuring compatibility across all modern browsers with JavaScript enabled. It is designed for smartphone use but functions seamlessly on desktop browsers as well.
-
-## Accessing the App
-
-TPA Scorekeeper is readily accessible at [https://www.coppolapaolo.it/tpa.html](https://www.coppolapaolo.it/tpa.html). The app uses cookies to remember player names for convenience. It can also be run locally or installed on any server for personal use.
+The app runs entirely in the browser with no server required. Built with Bootstrap 5.3.2 and optimized for smartphones, but works on any modern browser with JavaScript enabled.
 
 ## How to Use
 
-1. Start by entering the player names and clicking the 'Start' button.
-2. Use the player name buttons to toggle between players. The active player is highlighted.
-3. Begin each player's turn by noting the number of balls pocketed. For break shots, include both the balls pocketed on the break and the total for the turn.
-4. Log any errors or fouls as per TPA terminology next.
-5. Switch to the other player by pressing the player button. If the button isn't enabled, it means the entry doesn't comply with TPA rules.
-6. Press the 'G' button to indicate a game win (when the 9-ball is pocketed).
-7. The ongoing score is displayed below the players' names, showing pocketed balls, errors, TPA score, and racks won in real-time.
+1. Enter player names and select the game type (9-ball, 8-ball, or 10-ball)
+2. Click **Start** to begin the match
+3. For each turn, enter:
+   - Number of balls pocketed (for break shots: balls on break + total)
+   - Any errors or fouls using the TPA notation buttons
+4. Toggle between players using the player name buttons
+5. Press **G** when the game ball is pocketed to end the rack
+6. View statistics and match history from the navigation menu
+
+## TPA Notation Reference
+
+| Button | Meaning |
+|--------|---------|
+| M | Miss |
+| K | Kick shot |
+| S | Safety |
+| P | Pocketed cue ball (foul) |
+| N | No hit (foul) |
+| n | Difficult miss (Mn) |
+| x | Safety exchange |
+| p | Push out |
+
+## Learn More About TPA
+
+The Total Performance Average system was developed by Accu-Stats Video Productions. Learn more at [Accu-Stats TPA Rating](https://billiards.colostate.edu/faq/rating/accu-stats-tpa/).
 
 ## License
 
-TPA Scorekeeper is released under the AGPL license. For more information, please see the license file included in the repository.
+TPA Scorekeeper is released under the AGPL license. See the license file for details.
 
-## Learn More About TPA Rating
+## Contributing
 
-To delve deeper into the Accu-Stats TPA Rating system and understand the methodology behind our scoring, visit [Accu-Stats TPA Rating](https://billiards.colostate.edu/faq/rating/accu-stats-tpa/).
+Found a bug or have a suggestion? Open an issue on [GitHub](https://github.com/coppolapaolo/TPA-scorekeeper/issues).
