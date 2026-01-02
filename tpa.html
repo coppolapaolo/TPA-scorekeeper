@@ -1815,15 +1815,19 @@
             const currentTurn = match.getTurn();
             let player1Fouls = 0;
             let player2Fouls = 0;
+            let player1Found = false;
+            let player2Found = false;
 
             // Find the most recent completed turn for each player
             let turn = currentTurn;
-            while (turn && (player1Fouls === 0 || player2Fouls === 0)) {
+            while (turn && (!player1Found || !player2Found)) {
                 if (turn.tpaAnnotation.totalPotted !== null) { // completed turn
-                    if (turn.player === 1 && player1Fouls === 0) {
+                    if (turn.player === 1 && !player1Found) {
                         player1Fouls = turn.consecutiveErrors;
-                    } else if (turn.player === 2 && player2Fouls === 0) {
+                        player1Found = true;
+                    } else if (turn.player === 2 && !player2Found) {
                         player2Fouls = turn.consecutiveErrors;
+                        player2Found = true;
                     }
                 }
                 turn = turn.previousTurn;
@@ -3002,6 +3006,17 @@
                 const scoreEl = document.getElementById('score');
                 scoreEl.textContent = '';
                 scoreEl.insertAdjacentHTML('beforeend', turn.score);
+            }
+
+            // Update active player indicator to show whose turn this was
+            const label1 = document.getElementById('player1Label');
+            const label2 = document.getElementById('player2Label');
+            if (turn.player === 1) {
+                label1.classList.add('active');
+                label2.classList.remove('active');
+            } else {
+                label1.classList.remove('active');
+                label2.classList.add('active');
             }
         }
 
