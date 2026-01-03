@@ -244,6 +244,10 @@
             font-size: 0.8em;
             color: #888;
         }
+        .score-stats-row {
+            font-size: 0.8em;
+            color: #666;
+        }
         .score-achievements {
             font-size: 0.75em;
             color: #28a745;
@@ -493,6 +497,11 @@
         <div id="scoreButtons" class="container mt-2" style="display: block;">
             <div class="row justify-content-center mb-1">
                 <div class="col-auto p-0">
+                    <button type="button" id="button0" class="btn btn-secondary btn-square">0</button>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
                     <button type="button" id="button1" class="btn btn-secondary btn-square">1</button>
                 </div>
                 <div class="col-auto p-0">
@@ -527,11 +536,6 @@
             <div class="row justify-content-center mb-1">
                 <div class="col-auto p-0">
                     <button type="button" id="button10" class="btn btn-secondary btn-square">10</button>
-                </div>
-            </div>
-            <div class="row justify-content-center mb-2">
-                <div class="col-auto p-0">
-                    <button type="button" id="button0" class="btn btn-secondary btn-square">0</button>
                 </div>
             </div>
             <div class="row justify-content-center mb-1">
@@ -582,7 +586,7 @@
             </div>
         </div>
     </div>
-    <div id="endMatch" class="justify-content-center" style="display: none;">
+    <div id="endMatch" class="justify-content-center mt-3" style="display: none;">
         <button type="button" class="btn btn-primary col-7" onclick="endMatch()">End Match</button>
     </div>
     <div id="results" class="container justify-content-center mb-5 flex-column" style="display: none;">
@@ -882,7 +886,7 @@
         <div class="card mb-3">
             <div class="card-header">About</div>
             <div class="card-body">
-                <p class="mb-2"><strong>TPA Scorekeeper</strong> v2.0.0</p>
+                <p class="mb-2"><strong>TPA Scorekeeper</strong> v2.1.0</p>
                 <p class="text-muted small mb-2">
                     Built with love for American pool by Paolo Coppola.
                 </p>
@@ -1268,6 +1272,7 @@
                     this.updateScore(this.racks[this.currentRack].turns[this.currentTurn]);
                     const tripleFoul = this.gameType !== 8 && this.getTurn().consecutiveErrors >= 3;
                     this.getTurn().score = scoreToString(this.score);
+                    this.getTurn().scoreData = JSON.parse(JSON.stringify(this.score));
                     if (this.racks[this.currentRack].turns[this.currentTurn].isWinning()) {
                         // Detect achievements before creating new rack
                         this.detectRackAchievements(this.getTurn());
@@ -1777,8 +1782,8 @@
                 document.getElementById('circle2').classList.remove('winning');
                 document.getElementById('circle2').style.border = "none";
                 document.getElementById('kicks').textContent = '';
-                document.getElementById('kicks1').innerHTML = '';
-                document.getElementById('kicks2').innerHTML = '';
+                document.getElementById('kicks1').textContent = '';
+                document.getElementById('kicks2').textContent = '';
             }
 
             let whiteLabelText = '';
@@ -2947,11 +2952,29 @@
         function exitViewMode() {
             document.body.classList.remove('history-mode');
             document.body.classList.remove('edit-mode');
+
+            // Reset winning state from history mode before updating labels
+            document.getElementById('circle1').classList.remove('winning');
+            document.getElementById('circle2').classList.remove('winning');
+            document.getElementById('circle1').style.border = "none";
+            document.getElementById('circle2').style.border = "none";
+
             updateLabels(match.getTurn());
             updateButtons(match.getTurn());
             document.getElementById('score').textContent = '';
             document.getElementById('score').insertAdjacentHTML('beforeend', scoreToString(match.score));
             updateHistoryNavButtons();
+
+            // Restore active player indicator to current player
+            const label1 = document.getElementById('player1Label');
+            const label2 = document.getElementById('player2Label');
+            if (match.currentPlayer === 1) {
+                label1.classList.add('active');
+                label2.classList.remove('active');
+            } else {
+                label1.classList.remove('active');
+                label2.classList.add('active');
+            }
 
             // Show endMatch button if current turn is a break and not yet played
             if (match.getTurn().isBreak() && !match.getTurn().hasBeenPlayed()) {
@@ -3218,7 +3241,10 @@
                     breakErrors: 0,
                     kickErrors: 0,
                     safetyErrors: 0,
-                    positionError: 0
+                    positionError: 0,
+                    runOuts: 0,
+                    breakAndRuns: 0,
+                    perfectRacks: 0
                 },
                 player2: {
                     racksWon: 0,
@@ -3227,7 +3253,10 @@
                     breakErrors: 0,
                     kickErrors: 0,
                     safetyErrors: 0,
-                    positionError: 0
+                    positionError: 0,
+                    runOuts: 0,
+                    breakAndRuns: 0,
+                    perfectRacks: 0
                 }
             };
 
@@ -3237,6 +3266,9 @@
 
             // Iterate through all completed turns and recalculate
             for (let r = 1; r < match.racks.length; r++) {
+                // Reset per-rack error tracking for each rack
+                match.rackErrors = { player1: 0, player2: 0 };
+
                 for (let t = 1; t < match.racks[r].turns.length; t++) {
                     const turn = match.racks[r].turns[t];
 
@@ -3245,7 +3277,14 @@
                         match.currentRack = r;
                         match.currentTurn = t;
                         match.updateScore(turn);
+
+                        // Detect achievements for winning turns
+                        if (turn.isWinning()) {
+                            match.detectRackAchievements(turn);
+                        }
+
                         turn.score = scoreToString(match.score);
+                        turn.scoreData = JSON.parse(JSON.stringify(match.score));
                     }
                 }
             }
@@ -3290,6 +3329,11 @@
             return parts.length > 0 ? parts.join(' ') : '-';
         }
 
+        // Always show all achievements (for end match screen)
+        function formatAchievementsAll(player) {
+            return `BR:${player.breakAndRuns || 0} RO:${player.runOuts || 0} PR:${player.perfectRacks || 0}`;
+        }
+
         // Compact format for player section display (e.g., "BR1 RO0")
         function formatAchievementsCompact(player) {
             const parts = [];
@@ -3322,18 +3366,32 @@
             const stats1 = formatPlayerStats(score.player1);
             const stats2 = formatPlayerStats(score.player2);
             let achievementsRow = '';
-            const showAnyAchievement = displaySettings.showBR || displaySettings.showRO || displaySettings.showPR;
-            if (showAnyAchievement) {
-                const achieve1 = formatAchievements(score.player1);
-                const achieve2 = formatAchievements(score.player2);
-                if (achieve1 !== '-' || achieve2 !== '-') {
-                    achievementsRow = `<div class="score-achievements">${achieve1} | ${achieve2}</div>`;
-                }
+            const achieve1 = formatAchievements(score.player1);
+            const achieve2 = formatAchievements(score.player2);
+            if (achieve1 !== '-' || achieve2 !== '-') {
+                achievementsRow = `<div class="score-achievements">${achieve1} | ${achieve2}</div>`;
             }
             return `<div class="score-display">
                 <div class="score-racks"><strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong></div>
-                <div class="score-tpa"><span class="score-stats">${stats1}</span> <span class="tpa-value">${tpa1}</span> TPA <span class="tpa-value">${tpa2}</span> <span class="score-stats">${stats2}</span></div>
+                <div class="score-tpa"><span class="tpa-value">${tpa1}</span> TPA <span class="tpa-value">${tpa2}</span></div>
+                <div class="score-stats-row">${stats1} | ${stats2}</div>
                 ${achievementsRow}
+            </div>`;
+        }
+
+        // Full score display for end match screen (always shows all data)
+        function scoreToStringFull(score) {
+            const tpa1 = tpaScore(score.player1);
+            const tpa2 = tpaScore(score.player2);
+            const stats1 = `B${score.player1.ballsPotted} ${formatErrorsByType(score.player1)}`;
+            const stats2 = `B${score.player2.ballsPotted} ${formatErrorsByType(score.player2)}`;
+            const achieve1 = formatAchievementsAll(score.player1);
+            const achieve2 = formatAchievementsAll(score.player2);
+            return `<div class="score-display">
+                <div class="score-racks"><strong>${score.player1.racksWon} - ${score.player2.racksWon}</strong></div>
+                <div class="score-tpa"><span class="tpa-value">${tpa1}</span> TPA <span class="tpa-value">${tpa2}</span></div>
+                <div class="score-stats-row">${stats1} | ${stats2}</div>
+                <div class="score-achievements">${achieve1} | ${achieve2}</div>
             </div>`;
         }
 
@@ -3527,7 +3585,8 @@
                     //if the turn is the last of the rack, add a row with the rack score
                     if (j === match.racks[i].turns.length - 1) {
                         let scoreRow = document.createElement('tr');
-                        scoreRow.innerHTML = `<td colspan="2">${turn.score}</td>`;
+                        const scoreHtml = turn.scoreData ? scoreToStringFull(turn.scoreData) : turn.score;
+                        scoreRow.innerHTML = `<td colspan="2">${scoreHtml}</td>`;
                         tbody.appendChild(scoreRow);
                         if (i === match.racks.length - 2) {//if it's the last rack, add the final score
                             let finalScoreRow = document.createElement('tr');
