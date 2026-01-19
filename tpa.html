@@ -1656,7 +1656,7 @@
                         }
                     } 
                 } else if (!this.tpaAnnotation.noHit && !this.tpaAnnotation.pocketed) {
-                    if (this.breakTurn && this.tpaAnnotation.totalPotted === 0) {//special case where the break shot didn't pocket anything
+                    if (this.breakTurn && this.tpaAnnotation.totalPotted === 0 && (match.gameType !== 8 || this.tpaAnnotation.breakPotted === 0)) {//special case where the break shot didn't pocket anything (for 8-ball, only if nothing was pocketed on break either)
                         buttonIDs.push('buttonN');
                         buttonIDs.push('buttonP');
                     } else if (!this.tpaAnnotation.safety && !this.tpaAnnotation.missErrors && !this.tpaAnnotation.kick) {
