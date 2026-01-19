@@ -1858,15 +1858,26 @@
                 turn = turn.previousTurn;
             }
 
-            // Update indicators (show only for 1 or 2 fouls, 3+ triggers auto-win)
+            // Update foul indicators next to player names
+            // - For 9-ball and 10-ball: show F1/F2 (3 fouls triggers auto-win, so no F3+)
+            // - For 8-ball: show just "F" since triple foul rule doesn't apply and
+            //   consecutiveErrors can exceed 2 without ending the rack
             const indicator1 = document.getElementById('foulIndicator1');
             const indicator2 = document.getElementById('foulIndicator2');
 
             if (indicator1) {
-                indicator1.textContent = player1Fouls >= 1 && player1Fouls <= 2 ? `F${player1Fouls}` : '';
+                if (match.gameType === 8) {
+                    indicator1.textContent = player1Fouls >= 1 ? 'F' : '';
+                } else {
+                    indicator1.textContent = player1Fouls >= 1 && player1Fouls <= 2 ? `F${player1Fouls}` : '';
+                }
             }
             if (indicator2) {
-                indicator2.textContent = player2Fouls >= 1 && player2Fouls <= 2 ? `F${player2Fouls}` : '';
+                if (match.gameType === 8) {
+                    indicator2.textContent = player2Fouls >= 1 ? 'F' : '';
+                } else {
+                    indicator2.textContent = player2Fouls >= 1 && player2Fouls <= 2 ? `F${player2Fouls}` : '';
+                }
             }
         }
 
