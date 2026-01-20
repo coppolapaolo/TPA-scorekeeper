@@ -1157,7 +1157,7 @@
                 // Track errors per rack for perfect rack detection
                 this.rackErrors = { player1: 0, player2: 0 };
                 this.currentPlayer = 1;
-                this.gameType = gameType;
+                this.gameType = parseInt(gameType);
                 this.racks.push({turns:[null, new Turn(this.currentPlayer,true,this.gameType)]});
                 // History navigation state
                 this.viewingRack = null;    // null = viewing live position
