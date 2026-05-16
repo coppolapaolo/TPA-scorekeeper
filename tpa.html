@@ -1424,7 +1424,7 @@
                 const isBreakAndRun = this.checkBreakAndRun(rack, winningPlayer);
 
                 // Check Run Out: not a break-and-run, opponent had error before our run
-                const isRunOut = !isBreakAndRun && this.checkRunOut(rack, winningPlayer);
+                const isRunOut = !isBreakAndRun && this.checkRunOut(rack, winningPlayer, winningTurn);
 
                 // Check Perfect Rack: no errors by winning player in this rack
                 const isPerfectRack = this.rackErrors[`player${winningPlayer}`] === 0;
@@ -1454,22 +1454,39 @@
                 return true;
             }
 
-            checkRunOut(rack, winningPlayer) {
-                // Run Out: winning player cleared the table in exactly ONE turn
-                // after opponent's error (not a break-and-run)
+            checkRunOut(rack, winningPlayer, winningTurn) {
+                // Run Out (not a break-and-run, tracked separately):
+                // 1) the winning turn is NOT the break turn,
+                // 2) before the winning turn nobody pocketed any ball, except
+                //    balls made on the break shot itself,
+                // 3) the winning turn clears ALL balls left on the table in one visit.
 
-                // Count winning player's turns in this rack
-                let winningPlayerTurns = 0;
-                for (let i = 1; i < rack.turns.length; i++) {
-                    const t = rack.turns[i];
-                    if (t && t.player === winningPlayer) {
-                        winningPlayerTurns++;
-                    }
+                const breakTurn = rack.turns[1];
+                if (!breakTurn || !breakTurn.isBreak()) return false;
+
+                // (1) the winning turn must not be the break turn
+                if (winningTurn === breakTurn || winningTurn.isBreak()) return false;
+
+                // (3) the winning turn must clear every ball still on the table
+                if (!(winningTurn.tpaAnnotation.totalPotted > 0
+                      && winningTurn.tpaAnnotation.totalPotted === winningTurn.ballsRemaining)) {
+                    return false;
                 }
 
-                // Run out = winning player had exactly ONE turn (the winning turn)
-                // and opponent had at least one turn (which means opponent broke or played)
-                return winningPlayerTurns === 1;
+                // (2) no ball pocketed before the winning turn, except on the break shot
+                for (let i = 1; i < rack.turns.length; i++) {
+                    const t = rack.turns[i];
+                    if (!t || t === winningTurn) continue;
+                    if (t.isBreak()) {
+                        // only the balls made on the break shot are allowed
+                        if (t.tpaAnnotation.totalPotted !== (t.tpaAnnotation.breakPotted || 0)) {
+                            return false;
+                        }
+                    } else if (t.tpaAnnotation.totalPotted > 0) {
+                        return false;
+                    }
+                }
+                return true;
             }
 
             // History navigation methods
