@@ -1660,7 +1660,13 @@
                         buttonIDs.push('buttonN');
                         buttonIDs.push('buttonP');
                     } else if (!this.tpaAnnotation.safety && !this.tpaAnnotation.missErrors && !this.tpaAnnotation.kick) {
-                        if (this.tpaAnnotation.breakPotted <= this.tpaAnnotation.totalPotted && this.tpaAnnotation.totalPotted > 0) {
+                        // 8-ball: opponent fouled (no hit / cue ball pocketed) on the previous turn,
+                        // so the incoming player wins the rack without potting anything (0 then G).
+                        const wonByOpponentFoul = match.gameType === 8
+                            && this.tpaAnnotation.totalPotted === 0
+                            && this.previousTurn != null
+                            && (this.previousTurn.tpaAnnotation.noHit || this.previousTurn.tpaAnnotation.pocketed);
+                        if ((this.tpaAnnotation.breakPotted <= this.tpaAnnotation.totalPotted && this.tpaAnnotation.totalPotted > 0) || wonByOpponentFoul) {
                             buttonIDs.push('buttonG');
                             if (this.previousTurn != null && (this.previousTurn.tpaAnnotation.safeX || this.previousTurn.tpaAnnotation.push || this.previousTurn.tpaAnnotation.safety) && this.tpaAnnotation.kickSequence.length === 0) {
                                 buttonIDs.push('buttonK-in');
