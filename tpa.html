@@ -1017,6 +1017,8 @@
             // Serialize the match state (excluding methods and circular references)
             const state = {
                 startDate: match.startDate,
+                startTime: match.startTime,
+                rackEndTimes: match.rackEndTimes,
                 players: match.players,
                 score: match.score,
                 rackErrors: match.rackErrors,
@@ -1073,6 +1075,8 @@
                 // Recreate Match instance
                 const restoredMatch = new Match(state.players[0].name, state.players[1].name, state.gameType, state.breakFormat);
                 restoredMatch.startDate = state.startDate;
+                restoredMatch.startTime = state.startTime || Date.now();
+                restoredMatch.rackEndTimes = state.rackEndTimes || [];
                 restoredMatch.score = state.score;
                 restoredMatch.rackErrors = state.rackErrors || { player1: 0, player2: 0 };
                 restoredMatch.currentRack = state.currentRack;
@@ -1143,12 +1147,26 @@
             return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
         }
 
+        // Human-readable duration from milliseconds, e.g. "1h 04m 12s" or "07m 30s"
+        function formatDuration(ms) {
+            if (ms == null || isNaN(ms) || ms < 0) return '–';
+            const totalSec = Math.round(ms / 1000);
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            const mm = String(m).padStart(2, '0');
+            const ss = String(s).padStart(2, '0');
+            return h > 0 ? `${h}h ${mm}m ${ss}s` : `${mm}m ${ss}s`;
+        }
+
         class Match {
             constructor(player1name, player2name, gameType, breakFormat) {
                 // gameType is an integer: 8, 9, 10
                 // breakFormat: 'alternate' | 'winner' | 'loser' — drives the next-break suggestion only (non-binding)
                 this.breakFormat = breakFormat || 'alternate';
                 this.startDate = formatDateTime(new Date()); // Current date and time
+                this.startTime = Date.now(); // epoch ms, for match/game duration (shown only in final summary)
+                this.rackEndTimes = []; // epoch ms at each completed rack; rackEndTimes[i] = end of game i+1
                 this.players = [
                     { name: player1name },
                     { name: player2name }
@@ -1335,6 +1353,7 @@
                     if (this.racks[this.currentRack].turns[this.currentTurn].isWinning()) {
                         // Detect achievements before creating new rack
                         this.detectRackAchievements(this.getTurn());
+                        this.rackEndTimes.push(Date.now()); // game just completed
                         this.racks.push({ turns: [null] });
                         this.currentRack++;
                         this.currentTurn = 1;
@@ -3820,6 +3839,50 @@
                 }
             }
             document.getElementById('results').appendChild(results);
+
+            // Match / game time summary (final screen only) — built via DOM (no innerHTML)
+            const ends = match.rackEndTimes || [];
+            if (match.startTime && ends.length > 0) {
+                const total = ends[ends.length - 1] - match.startTime;
+
+                const timeCard = document.createElement('div');
+                timeCard.className = 'card mb-3 mt-3';
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+
+                const header = document.createElement('div');
+                header.className = 'd-flex justify-content-between align-items-center mb-2';
+                const hLabel = document.createElement('strong');
+                hLabel.textContent = 'Match time';
+                const hValue = document.createElement('strong');
+                hValue.textContent = formatDuration(total);
+                header.appendChild(hLabel);
+                header.appendChild(hValue);
+
+                const table = document.createElement('table');
+                table.className = 'table table-sm mb-0';
+                const tbody = document.createElement('tbody');
+                for (let g = 0; g < ends.length; g++) {
+                    const prev = g === 0 ? match.startTime : ends[g - 1];
+                    const tr = document.createElement('tr');
+                    const tdName = document.createElement('td');
+                    tdName.className = 'text-start';
+                    tdName.textContent = `Game ${g + 1}`;
+                    const tdDur = document.createElement('td');
+                    tdDur.className = 'text-end';
+                    tdDur.textContent = formatDuration(ends[g] - prev);
+                    tr.appendChild(tdName);
+                    tr.appendChild(tdDur);
+                    tbody.appendChild(tr);
+                }
+                table.appendChild(tbody);
+
+                cardBody.appendChild(header);
+                cardBody.appendChild(table);
+                timeCard.appendChild(cardBody);
+                document.getElementById('results').appendChild(timeCard);
+            }
+
             document.getElementById('main').style.display = 'none';
             document.getElementById('endMatch').classList.remove('d-flex');
             document.getElementById('results').style.display = 'block';
