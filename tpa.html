@@ -217,6 +217,17 @@
             color: #dc3545;
             font-weight: bold;
         }
+        /* Next-break suggestion indicator (bottom-right, mirrors foul indicator) */
+        .break-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 0.6em;
+            color: #0d6efd;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
         #player1Label, #player2Label {
             position: relative;
         }
@@ -409,6 +420,14 @@
             <input type="radio" class="btn-check" name="gameType" id="gameType3"  value="10" autocomplete="off">
             <label class="btn btn-outline-primary btn-match-type" for="gameType3">10 ball</label>
         </div>
+        <div class="d-flex justify-content-center mt-2 me-2">
+            <input type="radio" class="btn-check" name="breakFormat" id="breakAlt" value="alternate" autocomplete="off" checked>
+            <label class="btn btn-outline-secondary btn-sm me-2 btn-match-type" for="breakAlt">Alternate Break</label>
+            <input type="radio" class="btn-check" name="breakFormat" id="breakWin" value="winner" autocomplete="off">
+            <label class="btn btn-outline-secondary btn-sm me-2 btn-match-type" for="breakWin">Winner Breaks</label>
+            <input type="radio" class="btn-check" name="breakFormat" id="breakLose" value="loser" autocomplete="off">
+            <label class="btn btn-outline-secondary btn-sm btn-match-type" for="breakLose">Loser Breaks</label>
+        </div>
         <button type="button" class="btn btn-primary col-5" style="margin: .5em;" onclick="startMatch()">Start</button>
         <div class="d-flex justify-content-center gap-2 mt-3">
             <button type="button" class="btn btn-outline-secondary" style="min-width: 100px;" onclick="showHistoryView()">
@@ -445,7 +464,7 @@
             <div class="d-flex align-items-stretch">
                 <div class="player-name-column">
                     <label id="player1Label" class="player-name-box btn btn-outline-primary" for="player1Option" onclick="selectPlayer(1)">
-                        Player1<span id="foulIndicator1" class="foul-indicator"></span>
+                        Player1<span id="foulIndicator1" class="foul-indicator"></span><span id="breakIndicator1" class="break-indicator"></span>
                     </label>
                     <span class="tpa-display">TPA <strong id="player1Tpa">-</strong></span>
                     <span class="be-display" id="player1Stats">B0 E0</span>
@@ -471,7 +490,7 @@
             <div class="d-flex align-items-stretch">
                 <div class="player-name-column">
                     <label id="player2Label" class="player-name-box btn btn-outline-primary" for="player2Option" onclick="selectPlayer(2)">
-                        Player2<span id="foulIndicator2" class="foul-indicator"></span>
+                        Player2<span id="foulIndicator2" class="foul-indicator"></span><span id="breakIndicator2" class="break-indicator"></span>
                     </label>
                     <span class="tpa-display">TPA <strong id="player2Tpa">-</strong></span>
                     <span class="be-display" id="player2Stats">B0 E0</span>
@@ -1005,6 +1024,7 @@
                 currentTurn: match.currentTurn,
                 currentPlayer: match.currentPlayer,
                 gameType: match.gameType,
+                breakFormat: match.breakFormat,
                 viewingRack: match.viewingRack,
                 viewingTurn: match.viewingTurn,
                 isHistoryMode: match.isHistoryMode,
@@ -1051,7 +1071,7 @@
                 const state = JSON.parse(saved);
 
                 // Recreate Match instance
-                const restoredMatch = new Match(state.players[0].name, state.players[1].name, state.gameType);
+                const restoredMatch = new Match(state.players[0].name, state.players[1].name, state.gameType, state.breakFormat);
                 restoredMatch.startDate = state.startDate;
                 restoredMatch.score = state.score;
                 restoredMatch.rackErrors = state.rackErrors || { player1: 0, player2: 0 };
@@ -1124,8 +1144,10 @@
         }
 
         class Match {
-            constructor(player1name, player2name, gameType) {
+            constructor(player1name, player2name, gameType, breakFormat) {
                 // gameType is an integer: 8, 9, 10
+                // breakFormat: 'alternate' | 'winner' | 'loser' — drives the next-break suggestion only (non-binding)
+                this.breakFormat = breakFormat || 'alternate';
                 this.startDate = formatDateTime(new Date()); // Current date and time
                 this.players = [
                     { name: player1name },
@@ -1261,6 +1283,33 @@
                 } else if (!this.getTurn().tpaAnnotation.kick && !this.getTurn().tpaAnnotation.safety && !this.getTurn().tpaAnnotation.missErrors && !this.getTurn().tpaAnnotation.pocketed && !this.getTurn().tpaAnnotation.noHit) {
                     return false;
                 } else return true;
+            }
+
+            /*
+            Returns the player number (1 or 2) that *should* break the current rack
+            according to the configured break format, or null when no suggestion
+            applies (first rack, history mode, or the break has already started).
+            This is purely advisory: it never changes state and never blocks the
+            free player switching.
+            */
+            suggestedBreaker() {
+                if (this.isHistoryMode) return null;
+                if (this.currentRack <= 1) return null; // first break: decided by lag/agreement
+                const t = this.racks[this.currentRack].turns[this.currentTurn];
+                if (!t || !t.isBreak() || t.hasBeenPlayed()) return null;
+                const finished = this.racks[this.currentRack - 1];
+                if (!finished || !finished.turns[1]) return null;
+                const prevBreaker = finished.turns[1].player;
+                let winner = null;
+                for (let i = 1; i < finished.turns.length; i++) {
+                    const ft = finished.turns[i];
+                    if (ft && ft.isWinning()) { winner = ft.player; break; }
+                }
+                if (winner == null || prevBreaker == null) return null;
+                const other = p => (p === 1 ? 2 : 1);
+                if (this.breakFormat === 'winner') return winner;
+                if (this.breakFormat === 'loser') return other(winner);
+                return other(prevBreaker); // 'alternate'
             }
 
             togglePlayer() {
@@ -1909,6 +1958,7 @@
             }
 
             updateFoulIndicators();
+            updateBreakIndicator();
         }
 
         function setPlayerLabel(playerNum, name) {
@@ -1922,6 +1972,20 @@
             span.id = `foulIndicator${playerNum}`;
             span.className = 'foul-indicator';
             label.appendChild(span);
+            // Re-add break indicator span (label content was cleared above)
+            const breakSpan = document.createElement('span');
+            breakSpan.id = `breakIndicator${playerNum}`;
+            breakSpan.className = 'break-indicator';
+            label.appendChild(breakSpan);
+        }
+
+        function updateBreakIndicator() {
+            const ind1 = document.getElementById('breakIndicator1');
+            const ind2 = document.getElementById('breakIndicator2');
+            if (!ind1 || !ind2) return;
+            const next = match ? match.suggestedBreaker() : null;
+            ind1.textContent = next === 1 ? 'break' : '';
+            ind2.textContent = next === 2 ? 'break' : '';
         }
 
         function updateFoulIndicators() {
@@ -2811,7 +2875,8 @@
             const player1Name = document.getElementById('player1').value || 'Player 1';
             const player2Name = document.getElementById('player2').value || 'Player 2';
             saveNames(); // Save to cookies for next time
-            match = new Match(player1Name, player2Name, document.querySelector('input[name="gameType"]:checked').value);
+            const breakFormat = (document.querySelector('input[name="breakFormat"]:checked') || {}).value || 'alternate';
+            match = new Match(player1Name, player2Name, document.querySelector('input[name="gameType"]:checked').value, breakFormat);
 
             // Hide all views first
             VIEWS.forEach(id => {
