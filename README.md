@@ -12,6 +12,8 @@ Built with love for American pool by Paolo Coppola.
 - **Real-time Scoring**: Live TPA calculation, balls pocketed, errors, and racks won
 - **Achievement Tracking**: Break & Run (BR), Run Out (RO), and Perfect Rack (PR) detection
 - **Foul Counter**: Visual indicator for consecutive fouls (F1, F2)
+- **Break Format**: Alternate Break, Winner Breaks, or Loser Breaks, with a non-binding indicator suggesting who should break the next rack
+- **Match Time**: Total match and per-game durations, shown in the final summary screen
 
 ### Statistics & History
 - **Local Storage**: All matches saved locally using IndexedDB
@@ -35,7 +37,7 @@ The app runs entirely in the browser with no server required. Built with Bootstr
 
 ## How to Use
 
-1. Enter player names and select the game type (9-ball, 8-ball, or 10-ball)
+1. Enter player names, select the game type (9-ball, 8-ball, or 10-ball) and the break format (Alternate / Winner / Loser Breaks)
 2. Click **Start** to begin the match
 3. For each turn, enter:
    - Number of balls pocketed (for break shots: balls on break + total)
