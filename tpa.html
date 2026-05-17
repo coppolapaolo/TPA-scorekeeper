@@ -576,6 +576,11 @@
                     <button type="button" id="buttonK-in" class="btn btn-secondary" style="width: 150px; height: 40px; margin: 0.15em">first shot kick-in</button>
                 </div>
             </div>
+            <div class="row justify-content-center mb-1">
+                <div class="col-auto p-0">
+                    <button type="button" id="buttonRunout" class="btn btn-outline-success" style="width: 150px; height: 40px; margin: 0.15em">Runout?</button>
+                </div>
+            </div>
         </div>
         <div id="historyNav" class="row justify-content-center mt-3" style="display: none;">
             <div class="col-4">
@@ -1026,6 +1031,7 @@
                                     push: turn.tpaAnnotation.push,
                                     safeX: turn.tpaAnnotation.safeX,
                                     noHit: turn.tpaAnnotation.noHit,
+                                    runOut: turn.tpaAnnotation.runOut,
                                     kickSequence: turn.tpaAnnotation.kickSequence
                                 }
                             };
@@ -1079,6 +1085,7 @@
                             turn.tpaAnnotation.push = turnData.tpaAnnotation.push;
                             turn.tpaAnnotation.safeX = turnData.tpaAnnotation.safeX;
                             turn.tpaAnnotation.noHit = turnData.tpaAnnotation.noHit;
+                            turn.tpaAnnotation.runOut = turnData.tpaAnnotation.runOut;
                             turn.tpaAnnotation.kickSequence = turnData.tpaAnnotation.kickSequence.map(k => new KickIn(k.player, k.isFirst));
 
                             return turn;
@@ -1219,10 +1226,13 @@
                             this.getTurn().tpaAnnotation.safeX = this.getTurn().tpaAnnotation.safeX === null ? true : !this.getTurn().tpaAnnotation.safeX;
                             this.getTurn().tpaAnnotation.push = false;
                             break;
-                        case 'buttonp': 
+                        case 'buttonp':
                             this.getTurn().tpaAnnotation.push = this.getTurn().tpaAnnotation.push === null ? true : !this.getTurn().tpaAnnotation.push;
                             this.getTurn().pushed = this.getTurn().tpaAnnotation.push;
                             this.getTurn().tpaAnnotation.safeX = false;
+                            break;
+                        case 'buttonRunout':
+                            this.getTurn().tpaAnnotation.runOut = this.getTurn().tpaAnnotation.runOut === true ? false : true;
                             break;
                     }
                 }
@@ -1454,32 +1464,28 @@
                 return true;
             }
 
-            checkRunOut(rack, winningPlayer, winningTurn) {
-                // Run Out (not a break-and-run, tracked separately):
-                // 1) the winning turn is NOT the break turn,
-                // 2) before the winning turn nobody pocketed any ball, except
-                //    balls made on the break shot itself,
-                // 3) the winning turn clears ALL balls left on the table in one visit.
-
+            // Conditions 1 & 2 of a run-out (shared by checkRunOut and the
+            // "Runout?" button visibility, so they never diverge):
+            // 1) the winning turn is NOT the break turn,
+            // 2) before the winning turn nobody pocketed any ball, except
+            //    balls made on the break shot itself (totalPotted <= breakPotted
+            //    on the break turn; extra balls after the break disqualify).
+            runOutConditionsMet(rack, winningTurn) {
+                if (!rack || !winningTurn) return false;
                 const breakTurn = rack.turns[1];
                 if (!breakTurn || !breakTurn.isBreak()) return false;
 
                 // (1) the winning turn must not be the break turn
                 if (winningTurn === breakTurn || winningTurn.isBreak()) return false;
 
-                // (3) the winning turn must clear every ball still on the table
-                if (!(winningTurn.tpaAnnotation.totalPotted > 0
-                      && winningTurn.tpaAnnotation.totalPotted === winningTurn.ballsRemaining)) {
-                    return false;
-                }
-
                 // (2) no ball pocketed before the winning turn, except on the break shot
                 for (let i = 1; i < rack.turns.length; i++) {
                     const t = rack.turns[i];
                     if (!t || t === winningTurn) continue;
                     if (t.isBreak()) {
-                        // only the balls made on the break shot are allowed
-                        if (t.tpaAnnotation.totalPotted !== (t.tpaAnnotation.breakPotted || 0)) {
+                        // only the balls made on the break shot are allowed:
+                        // extra balls after the break (totalPotted > breakPotted) disqualify
+                        if (t.tpaAnnotation.totalPotted > (t.tpaAnnotation.breakPotted || 0)) {
                             return false;
                         }
                     } else if (t.tpaAnnotation.totalPotted > 0) {
@@ -1487,6 +1493,54 @@
                     }
                 }
                 return true;
+            }
+
+            // Run-out classification — single source of truth:
+            //  'no'    -> definitely not a run-out: the winning turn is the
+            //             break (that's a break-and-run), or the player has
+            //             already been to the table this rack (not a single
+            //             visit).
+            //  'yes'   -> the rigorous definition holds: not the break,
+            //             nothing potted before except on the break shot, and
+            //             the winning turn cleared every ball. Counted
+            //             automatically.
+            //  'maybe' -> won on the first visit but the count is ambiguous
+            //             (8-ball nominal count, 9/10-ball scratch): the
+            //             player confirms via the "Runout?" button.
+            runOutCategory(rack, winningPlayer, winningTurn) {
+                if (!rack || !winningTurn) return 'no';
+                const breakTurn = rack.turns[1];
+
+                // NO: break-and-run, or the player already had a turn this rack
+                if (winningTurn === breakTurn || winningTurn.isBreak()) return 'no';
+                for (let i = 1; i < rack.turns.length; i++) {
+                    const t = rack.turns[i];
+                    if (t === winningTurn) break;
+                    if (t && t.player === winningPlayer) return 'no';
+                }
+
+                // YES: the rigorous run-out definition (unchanged)
+                if (this.runOutConditionsMet(rack, winningTurn)
+                    && winningTurn.tpaAnnotation.totalPotted > 0
+                    && winningTurn.tpaAnnotation.totalPotted === winningTurn.ballsRemaining) {
+                    return 'yes';
+                }
+
+                // MAYBE: everything else
+                return 'maybe';
+            }
+
+            isAmbiguousRunOut(turn) {
+                if (!turn || !turn.isWinning()) return false;
+                const rack = this.racks[this.currentRack];
+                return this.runOutCategory(rack, turn.player, turn) === 'maybe';
+            }
+
+            checkRunOut(rack, winningPlayer, winningTurn) {
+                const cat = this.runOutCategory(rack, winningPlayer, winningTurn);
+                if (cat === 'yes') return true;
+                if (cat === 'maybe') return winningTurn.tpaAnnotation.runOut === true;
+                return false;
             }
 
             // History navigation methods
@@ -1569,6 +1623,7 @@
                 this.push = null;
                 this.safeX = null;
                 this.noHit = null;
+                this.runOut = null;
                 this.kickSequence = [];
             }
 
@@ -1582,6 +1637,7 @@
                 this.push = null;
                 this.safeX = null;
                 this.noHit = null;
+                this.runOut = null;
                 this.kickSequence = [];
             }
 
@@ -1658,7 +1714,11 @@
                 if (this.isWinning() || (this.tpaAnnotation.push)) {
                     if (this.isWinning() && this.previousTurn != null && (this.previousTurn.tpaAnnotation.safeX || this.previousTurn.tpaAnnotation.push || this.previousTurn.tpaAnnotation.safety) && this.tpaAnnotation.kickSequence.length === 0) {
                         buttonIDs.push('buttonK-in');
-                    }           
+                    }
+                    // Ambiguous run-out: let the player confirm it explicitly
+                    if (typeof match !== 'undefined' && match && match.getTurn() === this && match.isAmbiguousRunOut(this)) {
+                        buttonIDs.push('buttonRunout');
+                    }
                     return buttonIDs;
                 }
                 if (!this.tpaAnnotation.ballsAnnotated()) {
@@ -1780,6 +1840,14 @@
                     btn.style.visibility = '';
                 }
             });
+
+            // Reflect the "Runout?" toggle state on the button itself
+            const runoutBtn = document.getElementById('buttonRunout');
+            if (runoutBtn) {
+                const marked = turn.tpaAnnotation.runOut === true;
+                runoutBtn.classList.toggle('btn-success', marked);
+                runoutBtn.classList.toggle('btn-outline-success', !marked);
+            }
 
             updateSwitchPlayerStatus();
             document.getElementById('endMatch').classList.remove('d-flex');
@@ -2772,6 +2840,8 @@
                 updateButtons(match.getTurn());
                 saveMatchState();
             });
+            // "Runout?" is not a btn-square, so bind annotate explicitly
+            document.getElementById('buttonRunout').addEventListener('click', match.annotate.bind(match));
 
             updateLabels(match.getTurn());
             updateButtons(match.getTurn());
@@ -2808,6 +2878,8 @@
                 updateButtons(match.getTurn());
                 saveMatchState();
             });
+            // "Runout?" is not a btn-square, so bind annotate explicitly
+            document.getElementById('buttonRunout').addEventListener('click', match.annotate.bind(match));
 
             // Find the last turn of each player across all racks
             let lastPlayer1Turn = null;
