@@ -396,6 +396,25 @@
             text-align: center;
         }
 
+        /* Runout toggle: the OFF (outline) state must always look "empty",
+           identical to the button's first appearance, even while the pointer
+           is over it. Bootstrap's default .btn-outline-success:hover fills
+           the background green, which made an OFF toggle look still-on. */
+        #buttonRunout.btn-outline-success,
+        #buttonRunout.btn-outline-success:hover,
+        #buttonRunout.btn-outline-success:focus,
+        #buttonRunout.btn-outline-success:active {
+            background-color: transparent !important;
+            color: #198754 !important;
+            box-shadow: none !important;
+        }
+        /* ON (filled) state: kill the focus ring so it doesn't read as a
+           separate "pressed" look on top of the solid green. */
+        #buttonRunout.btn-success:focus,
+        #buttonRunout.btn-success:active {
+            box-shadow: none !important;
+        }
+
     </style>
     <meta charset="utf-8">
 </head>
@@ -1909,12 +1928,18 @@
                 }
             });
 
-            // Reflect the "Runout?" toggle state on the button itself
+            // Reflect the "Runout?" toggle state on the button itself.
+            // Text changes (Runout? <-> ✓ Runout) so the on/off state is
+            // unmistakable regardless of the subtle filled/outline difference.
             const runoutBtn = document.getElementById('buttonRunout');
             if (runoutBtn) {
                 const marked = turn.tpaAnnotation.runOut === true;
                 runoutBtn.classList.toggle('btn-success', marked);
                 runoutBtn.classList.toggle('btn-outline-success', !marked);
+                runoutBtn.textContent = marked ? '✓ Runout' : 'Runout?';
+                // Drop lingering :focus/:active styling so an OFF toggle
+                // doesn't keep looking "pressed/coloured" after the click.
+                runoutBtn.blur();
             }
 
             updateSwitchPlayerStatus();
